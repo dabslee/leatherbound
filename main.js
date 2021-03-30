@@ -60,9 +60,6 @@ function saveAreas(){
         setCookie(names[i], document.getElementById(names[i] + "-area").value, 10000000);
     }
 }
-document.onkeypress=function(e){
-    saveAreas();
-}
 
 /* Weather */
 const apiKey = "9237036ab7c0bf80dd4223ff17715372";
