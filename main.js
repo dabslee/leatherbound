@@ -42,6 +42,9 @@ function getCookie(c_name) {
     return "";
 }
 function setCookie(c_name,value,exdays) {
+    if (value.length == 0){
+        value = " ";
+    }
     var exdate=new Date();
     exdate.setDate(exdate.getDate() + exdays);
     var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
