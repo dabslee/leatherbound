@@ -112,10 +112,20 @@ function updateWeather() {
     });
 }
 
+var areasfilled = false;
 window.onload = function() {
     updateWeather();
     fillAreas();
+    areasfilled = true;
 }
 window.onunload = function() {
-    saveAreas();
+    if (areasfilled){
+        saveAreas();
+    }
+    areasfilled = false;
+}
+window.onkeypress = function() {
+    if (areasfilled){
+        saveAreas();
+    }
 }
