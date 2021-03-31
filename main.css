@@ -10,6 +10,24 @@
     --highlighter3: rgba(199, 255, 192, 0.5);
     --highlighter4: rgba(255, 212, 94, 0.5);
     --highlighter5: rgba(255, 243, 74, 0.5);
+    --text-color: black;
+    --post-outline-style: none;
+    --post-outline-color: white;
+    --post-outline-width: 2px;
+}
+
+[data-theme="dark"] {
+    --paper-color: #222;
+    --post-color: rgba(0,0,0,0);
+    --text-color: #ddd;
+    --highlighter1: rgba(0,0,0,0);
+    --highlighter2: rgba(0,0,0,0);
+    --highlighter3: rgba(0,0,0,0);
+    --highlighter4: rgba(0,0,0,0);
+    --highlighter5: rgba(0,0,0,0);
+    --post-outline-style: dashed;
+    --post-outline-color: white;
+    --post-outline-width: 2px;
 }
 
 ::selection {
@@ -17,10 +35,15 @@
 }
 
 body{
+    transition: var(--transition-time);
     margin: 2rem 4rem;
     font-family: var(--body-font);
     background-color: var(--paper-color);
     font-weight:600;
+    color: var(--text-color);
+}
+figcaption{
+    color: var(--text-color);
 }
 
 h1 {
@@ -106,6 +129,9 @@ h2 {
     transition: var(--transition-time);
     margin: 15px;
     align-self: flex-start;
+    outline-style: var(--post-outline-style);
+    outline-color: var(--post-outline-color);
+    outline-width: var(--post-outline-width);
 }
 .app:hover {
     box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
@@ -119,6 +145,9 @@ h2 {
     transition: var(--transition-time);
     margin: 15px;
     align-self: flex-start;
+    outline-style: var(--post-outline-style);
+    outline-color: var(--post-outline-color);
+    outline-width: var(--post-outline-width);
 }
 .app-double:hover {
     box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
@@ -129,6 +158,7 @@ textarea {
     border-style: none;
     font-family: var(--body-font);
     font-size: x-large;
+    color: var(--text-color);
 }
 
 textarea:focus {
@@ -164,4 +194,62 @@ a:hover {
 .link-icon:hover {
     transform: scale(1.1);
     opacity: 1;
+}
+
+
+
+
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    margin: 0px 30px;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 20px;
+    position: relative;
+    width: 40px;
+}
+
+.theme-switch input {
+    display:none;
+}
+
+.slider {
+    background-color: #999;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: var(--transition-time);
+}
+
+.slider:before {
+    background-color: #ddd;
+    bottom: 5px;
+    content: "";
+    height: 10px;
+    left: 5px;
+    position: absolute;
+    transition: .4s;
+    width: 10px;
+}
+
+input:checked + .slider {
+    background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
 }
