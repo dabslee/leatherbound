@@ -114,6 +114,7 @@ function updateWeather() {
 
 window.onload = function() {
     updateWeather();
+    fillAreas();
 }
 window.onunload = function() {
     saveAreas();
