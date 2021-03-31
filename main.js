@@ -108,6 +108,7 @@ function updateWeather() {
         document.getElementById("average-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp);
         document.getElementById("high-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_max);
         document.getElementById("low-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_min);
+        document.getElementById("precipitation-tomorrow").innerHTML = data.list[8].pop * 100;
         document.getElementById("icon-tomorrow").src = "https://img.icons8.com/plasticine/400/000000/" + icons[data.list[8].weather[0].icon] + ".png";
     });
 }
