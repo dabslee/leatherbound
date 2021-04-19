@@ -31,7 +31,8 @@ var timer = setInterval(updateDate, 100);
 
 function getData(key) {
     chrome.storage.sync.get(['key'], function(result) {
-        return result.key;
+        if (result) return result.key;
+        else return "";
     });
 }
 function setData(key,value) {
