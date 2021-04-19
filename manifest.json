@@ -1,6 +1,6 @@
 {
   "name": "leatherbound",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "manifest_version": 2,
   "description": "A custom productivity homepage by Brandon Lee",
   "homepage_url": "https://github.com/dabslee/leatherbound",
@@ -12,5 +12,6 @@
   "default_locale": "en",
   "chrome_url_overrides": {
     "newtab": "src/override/override.html"
-  }
+  },
+  "permissions": ["storage"]
 }
