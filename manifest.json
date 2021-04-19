@@ -13,5 +13,5 @@
   "chrome_url_overrides": {
     "newtab": "src/override/override.html"
   },
-  "permissions": ["storage"]
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com/ https://unpkg.com/; object-src 'self'"
 }

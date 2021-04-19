@@ -37,15 +37,17 @@ function setData(key,value) {
 }
 
 function fillAreas(){
-    var names = ["schedule", "todo", "diary"];
+    var names = ["schedule", "todo", "notes", "diary"];
     for (var i = 0; i < names.length; i++){
-        document.getElementById(names[i] + "-area").value = getData(names[i]);
+        area = document.getElementById(names[i] + "-area");
+        if (area) area.value = getData(names[i]);
     }
 }
 function saveAreas(){
-    var names = ["schedule", "todo", "diary"];
+    var names = ["schedule", "todo", "notes", "diary"];
     for (var i = 0; i < 5; i++){
-        setData(names[i], document.getElementById(names[i] + "-area").value);
+        area = document.getElementById(names[i] + "-area");
+        if (area) setData(names[i], area.value);
     }
 }
 
@@ -103,9 +105,13 @@ function updateWeather() {
 
 var areasfilled = false;
 window.onload = function() {
-    updateWeather();
-    fillAreas();
-    areasfilled = true;
+    window.setTimeout(function () {
+        document.getElementsByTagName("BODY")[0].style.transition = "0.2s";
+        document.getElementsByTagName("BODY")[0].style.opacity = "1";
+        updateWeather();
+        fillAreas();
+        areasfilled = true;
+    }, 200);
 }
 window.onunload = function() {
     if (areasfilled){
@@ -118,9 +124,6 @@ window.onkeypress = function() {
         saveAreas();
     }
 }
-
-
-
 
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 const currentTheme = localStorage.getItem('theme');
@@ -143,3 +146,24 @@ function switchTheme(e) {
 }
 
 toggleSwitch.addEventListener('change', switchTheme, false);
+
+todiary = document.getElementById('todiary');
+if (todiary) {
+    todiary.addEventListener('click', function (event) {
+        document.getElementsByTagName("BODY")[0].style.transition = "0.4s";
+        document.getElementsByTagName("BODY")[0].style.opacity = "0";
+        window.setTimeout(function () {
+            location.href = "diary.html";
+        }, 400);
+    });
+}
+tohome = document.getElementById('tohome');
+if (tohome) {
+    tohome.addEventListener('click', function (event) {
+        document.getElementsByTagName("BODY")[0].style.transition = "0.1s";
+        document.getElementsByTagName("BODY")[0].style.opacity = "0";
+        window.setTimeout(function () {
+            location.href = "override.html";
+        }, 100);
+    });
+}
