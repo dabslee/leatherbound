@@ -29,35 +29,25 @@ var updateDate = function(){
 }
 var timer = setInterval(updateDate, 100);
 
-function getCookie(c_name) {
-    var i,x,y,ARRcookies=document.cookie.split(";");
-    for (i=0;i<ARRcookies.length;i++){
-        x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-        y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-        x=x.replace(/^\s+|\s+$/g,"");
-        if (x==c_name) {
-            return unescape(y);
-        }
-    }
-    return "";
+function getData(key) {
+    chrome.storage.sync.get(['key'], function(result) {
+        return result.key;
+    });
 }
-function setCookie(c_name,value,exdays) {
-    var exdate=new Date();
-    exdate.setDate(exdate.getDate() + exdays);
-    var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-    document.cookie=c_name + "=" + c_value;
+function setData(key,value) {
+    chrome.storage.sync.set({key: value}, function() {});
 }
 
 function fillAreas(){
     var names = ["schedule", "todo", "diary"];
     for (var i = 0; i < names.length; i++){
-        document.getElementById(names[i] + "-area").value = getCookie(names[i]);
+        document.getElementById(names[i] + "-area").value = getData(names[i]);
     }
 }
 function saveAreas(){
     var names = ["schedule", "todo", "diary"];
     for (var i = 0; i < 5; i++){
-        setCookie(names[i], document.getElementById(names[i] + "-area").value, 10000000);
+        setData(names[i], document.getElementById(names[i] + "-area").value);
     }
 }
 
