@@ -30,13 +30,10 @@ var updateDate = function(){
 var timer = setInterval(updateDate, 100);
 
 function getData(key) {
-    chrome.storage.sync.get(['key'], function(result) {
-        if (result) return result.key;
-        else return "";
-    });
+    return localStorage.getItem(key);
 }
 function setData(key,value) {
-    chrome.storage.sync.set({key: value}, function() {});
+    return localStorage.setItem(key, value);
 }
 
 function fillAreas(){
