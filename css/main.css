@@ -19,14 +19,14 @@
 [data-theme="dark"] {
     --paper-color: #222;
     --post-color: rgba(0,0,0,0);
-    --text-color: #ddd;
+    --text-color: #bbb;
     --highlighter1: rgba(0,0,0,0);
     --highlighter2: rgba(0,0,0,0);
     --highlighter3: rgba(0,0,0,0);
     --highlighter4: rgba(0,0,0,0);
     --highlighter5: rgba(0,0,0,0);
     --post-outline-style: dashed;
-    --post-outline-color: white;
+    --post-outline-color: #bbb;
     --post-outline-width: 2px;
 }
 
