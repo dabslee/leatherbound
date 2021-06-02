@@ -42,8 +42,8 @@ body{
     font-weight:600;
     color: var(--text-color);
     font-size: 16px;
-    opacity: 0;
 }
+
 figcaption{
     color: var(--text-color);
 }
