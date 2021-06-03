@@ -88,12 +88,19 @@ class App extends React.Component {
                   </div>
               </div>
           </div>
-          <div id="todiary" class="navigator" target="_self">&#12297;</div>
+          <div id="todiary" class="navigator" onClick={() => this.setState({page: "diary"})}>&#12297;</div>
         </div>
       );
     } else {
       return (
-        <p>Diary</p>
+        <div id="content-container">
+          <div id="tohome" class="navigator" onClick={() => this.setState({page: "home"})}>&#12296;</div>
+          <div class="app-container">
+              <div class="app" style={{width: "80vw", height: "65vh"}}>
+                  <textarea id="diary-area" style={{width:"100%", height:"100%"}}></textarea>
+              </div>
+          </div>
+        </div>
       )
     }
   }
