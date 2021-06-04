@@ -27,30 +27,20 @@ ReactDOM.render(
         </div>
     </div>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById('root'),
+  function() {
+    window.onunload = function() {saveAreas();}
+    window.onkeypress = function() {saveAreas();}
+    window.onkeydown = function() {saveAreas(); console.log("saved");}
+  }
 );
 
-/* localStorage methods */
-function getData(key) {
-  return localStorage.getItem(key);
-}
-function setData(key,value) {
-  return localStorage.setItem(key, value);
-}
-
 /* Load and save areas */
-function fillAreas(){
-  var names = ["schedule", "todo", "notes", "diary"];
-  for (var i = 0; i < names.length; i++){
-      var area = document.getElementById(names[i] + "-area");
-      if (area) area.value = getData(names[i]);
-  }
-}
 function saveAreas(){
   var names = ["schedule", "todo", "notes", "diary"];
   for (var i = 0; i < 5; i++){
       var area = document.getElementById(names[i] + "-area");
-      if (area) setData(names[i], area.value);
+      if (area) localStorage.setItem(names[i], area.value);
   }
 }
 

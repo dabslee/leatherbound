@@ -7,6 +7,11 @@ class App extends React.Component {
   }
 
   render() {
+    // prep text
+    var schedule = localStorage.getItem("schedule");
+    var todo = localStorage.getItem("todo");
+    var notes = localStorage.getItem("notes");
+    // render
     if (this.state.page == "home") {
       return (
         <div id="content-container">
@@ -50,15 +55,15 @@ class App extends React.Component {
               </div>
               <div id="todo" class="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter3)"}}>To do</h2>
-                  <textarea id="todo-area" style={{width:"100%", height:"75%"}}></textarea>
+                  <textarea id="todo-area" style={{width:"100%", height:"75%"}}>{todo}</textarea>
               </div>
               <div id="schedule" class="app">
                   <h2 style={{backgroundColor: "var(--highlighter2)"}}>Schedule</h2>
-                  <textarea id="schedule-area" style={{width:"100%", height:"75%"}}></textarea>
+                  <textarea id="schedule-area" style={{width:"100%", height:"75%"}}>{schedule}</textarea>
               </div>
               <div id="notes" class="app">
                   <h2 style={{backgroundColor: "var(--highlighter4)"}}>Notes</h2>
-                  <textarea id="notes-area" style={{width:"100%", height:"75%"}}></textarea>
+                  <textarea id="notes-area" style={{width:"100%", height:"75%"}}>{notes}</textarea>
               </div>
               <div id="weather" class="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather</h2>
@@ -92,12 +97,13 @@ class App extends React.Component {
         </div>
       );
     } else {
+      var diary = localStorage.getItem("diary");
       return (
         <div id="content-container">
           <div id="tohome" class="navigator" onClick={() => this.setState({page: "home"})}>&#12296;</div>
           <div class="app-container">
               <div class="app" style={{width: "80vw", height: "65vh"}}>
-                  <textarea id="diary-area" style={{width:"100%", height:"100%"}}></textarea>
+                  <textarea id="diary-area" style={{width:"100%", height:"100%"}}>{diary}</textarea>
               </div>
           </div>
         </div>
