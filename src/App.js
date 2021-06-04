@@ -1,12 +1,66 @@
 import React from "react";
+import createClass from 'create-react-class';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {page: "home"};
-  }
+/* Weather */
+const apiKey = "9237036ab7c0bf80dd4223ff17715372";
+const icons = {
+    "01d":"sun--v1",
+    "01n":"bright-moon",
+    "02d":"partly-cloudy-day--v1",
+    "02n":"partly-cloudy-night",
+    "03d":"cloud",
+    "03n":"cloud",
+    "04d":"cloud",
+    "04n":"cloud",
+    "09d":"rain",
+    "09n":"rain",
+    "10d":"rain",
+    "10n":"rain",
+    "11d":"storm--v1",
+    "11n":"storm--v1",
+    "13d":"snow-storm",
+    "13n":"snow-storm",
+    "50d":"foggy-night-1",
+    "50n":"foggy-night-1"
+}
+function kToF(tempK) {
+    return Math.round((tempK-273.15)*1.8+32);
+}
+function weatherUpdate() {
+  fetch(`https://api.openweathermap.org/data/2.5/weather?id=5102922&appid=${apiKey}`)  
+  .then(function(resp) { return resp.json() })
+  .then(function(data) {
+      document.getElementById("description-today").innerHTML = data.weather[0].description;
+      document.getElementById("current-temp-today").innerHTML = kToF(data.main.temp);
+      document.getElementById("high-temp-today").innerHTML = kToF(data.main.temp_max);
+      document.getElementById("low-temp-today").innerHTML = kToF(data.main.temp_min);
+      document.getElementById("icon-today").src = "https://img.icons8.com/plasticine/400/000000/" + icons[data.weather[0].icon] + ".png";
+  });
+  fetch(`https://api.openweathermap.org/data/2.5/forecast?id=5102922&appid=${apiKey}`)
+  .then(function(resp) { return resp.json() })
+  .then(function(data) {
+      document.getElementById("precipitation-today").innerHTML = data.list[0].pop * 100;
 
-  render() {
+      console.log(data.list[8].weather[0].description)
+      document.getElementById("description-tomorrow").innerHTML = data.list[8].weather[0].description;
+      document.getElementById("average-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp);
+      document.getElementById("high-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_max);
+      document.getElementById("low-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_min);
+      document.getElementById("precipitation-tomorrow").innerHTML = data.list[8].pop * 100;
+      document.getElementById("icon-tomorrow").src = "https://img.icons8.com/plasticine/400/000000/" + icons[data.list[8].weather[0].icon] + ".png";
+  });
+}
+
+var App = createClass( {
+  getInitialState: function() {
+      return {page: "home"};
+  },
+
+  componentDidMount: function() {
+      weatherUpdate();
+  },
+
+  render: function() {
     // prep text
     var schedule = localStorage.getItem("schedule");
     var todo = localStorage.getItem("todo");
@@ -110,6 +164,6 @@ class App extends React.Component {
       )
     }
   }
-}
+} );
 
 export default App;
