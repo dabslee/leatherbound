@@ -1,0 +1,209 @@
+@import url("fonts.css");
+
+:root {
+    --transition-time: 0.4s;
+    --paper-color: rgb(242, 240, 238);
+    --post-color: rgb(238, 230, 223);
+    --body-font: 'Simplicity';
+    --highlighter1: rgba(193, 186, 255, 0.5);
+    --highlighter2: rgba(239, 176, 255, 0.5);
+    --highlighter3: rgba(199, 255, 192, 0.5);
+    --highlighter4: rgba(255, 212, 94, 0.5);
+    --highlighter5: rgba(255, 243, 74, 0.5);
+    --text-color: black;
+    --post-outline-style: none;
+    --post-outline-color: white;
+    --post-outline-width: 2px;
+}
+
+[data-theme="dark"] {
+    --paper-color: #222;
+    --post-color: rgba(0,0,0,0);
+    --text-color: #bbb;
+    --highlighter1: rgba(0,0,0,0);
+    --highlighter2: rgba(0,0,0,0);
+    --highlighter3: rgba(0,0,0,0);
+    --highlighter4: rgba(0,0,0,0);
+    --highlighter5: rgba(0,0,0,0);
+    --post-outline-style: dashed;
+    --post-outline-color: #bbb;
+    --post-outline-width: 2px;
+}
+
+::selection {
+    background-color: var(--highlighter5);
+}
+
+body{
+    transition: var(--transition-time);
+    margin: 2rem 4rem;
+    font-family: var(--body-font);
+    background-color: var(--paper-color);
+    font-weight:600;
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+figcaption{
+    color: var(--text-color);
+}
+
+h1 {
+    font-family: 'AutumnInNovember';
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+h2 {
+    text-transform: uppercase;
+    font-size: 40px;
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-weight: normal;
+    font-family: 'DearSunshine';
+    width:fit-content;
+    padding: 0 1rem;
+}
+.sh {
+    font-size: 30px;
+    font-style: italic;
+    color: gray;
+    font-family: var(--body-font);
+}
+#logo {
+    font-size: 25px;
+    font-family: 'VarelaRound';
+    font-weight: bold;
+    margin-top: 30px;
+}
+
+#header-container {
+    width: 100%;
+    height: 8rem;
+    display: flex;
+    justify-content: space-between;
+    user-select: none;
+}
+
+#content-container {
+    width: 100%;
+    min-height: calc(100vh - 14rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#app-container {
+    padding: 0 0 2rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: none;
+    max-width: 100%;
+    flex: 1 0;
+    align-items: center;
+    justify-content: center;
+}
+
+#footer-container {
+    width: 100%;
+    height: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.flower-box {
+    width: 20%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.flower-icon {
+    width: 50px;
+    height: 50px;
+    opacity: 0.3;
+}
+
+.app {
+    background-color: var(--post-color);
+    height: calc(270px + 20px);
+    width: 310px;
+    padding: 30px;
+    transition: var(--transition-time);
+    margin: 15px;
+    align-self: flex-start;
+    outline-style: var(--post-outline-style);
+    outline-color: var(--post-outline-color);
+    outline-width: var(--post-outline-width);
+}
+.app:hover {
+    box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
+}
+
+.app-double {
+    background-color: var(--post-color);
+    height: calc(270px + 20px);
+    width: calc(310px*2 + 90px);
+    padding: 30px;
+    transition: var(--transition-time);
+    margin: 15px;
+    align-self: flex-start;
+    outline-style: var(--post-outline-style);
+    outline-color: var(--post-outline-color);
+    outline-width: var(--post-outline-width);
+}
+.app-double:hover {
+    box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
+}
+
+textarea {
+    background-color: rgba(0,0,0,0);
+    border-style: none;
+    font-family: var(--body-font);
+    font-size: x-large;
+    color: var(--text-color);
+}
+
+textarea:focus {
+    outline: none;
+}
+
+a {
+    text-decoration: none;
+    color: sienna;
+    transition: var(--transition-time);
+}
+
+a:hover {
+    opacity: 0.5;
+}
+
+#quicklinks-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.link-icon {
+    margin: 0 30px;
+    text-align: center;
+    transition: var(--transition-time);
+    opacity: 1;
+    cursor: pointer;
+    color: black;
+}
+.link-icon:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.navigator {
+    font-size: 70px;
+    opacity: 0.1;
+    cursor: pointer;
+    transition: var(--transition-time);
+}
+.navigator:hover {
+    opacity: 0.3;
+}
