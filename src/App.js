@@ -1,3 +1,4 @@
+import $ from "jquery";
 import React from "react";
 import createClass from 'create-react-class';
 
@@ -27,28 +28,42 @@ function kToF(tempK) {
     return Math.round((tempK-273.15)*1.8+32);
 }
 function weatherUpdate() {
-  fetch(`https://api.openweathermap.org/data/2.5/weather?id=5102922&appid=${apiKey}`)  
+  fetch(`https://api.openweathermap.org/data/2.5/weather?id=5102922&appid=${apiKey}`)
   .then(function(resp) { return resp.json() })
   .then(function(data) {
-      document.getElementById("description-today").innerHTML = data.weather[0].description;
-      document.getElementById("current-temp-today").innerHTML = kToF(data.main.temp);
-      document.getElementById("high-temp-today").innerHTML = kToF(data.main.temp_max);
-      document.getElementById("low-temp-today").innerHTML = kToF(data.main.temp_min);
-      document.getElementById("icon-today").src = "https://img.icons8.com/plasticine/400/000000/" + icons[data.weather[0].icon] + ".png";
+      localStorage.setItem("description-today", data.weather[0].description);
+      localStorage.setItem("current-temp-today", kToF(data.main.temp));
+      localStorage.setItem("high-temp-today", kToF(data.main.temp_max));
+      localStorage.setItem("low-temp-today", kToF(data.main.temp_min));
+      localStorage.setItem("icon-today", "https://img.icons8.com/plasticine/400/000000/" + icons[data.weather[0].icon] + ".png");
   });
   fetch(`https://api.openweathermap.org/data/2.5/forecast?id=5102922&appid=${apiKey}`)
   .then(function(resp) { return resp.json() })
   .then(function(data) {
-      document.getElementById("precipitation-today").innerHTML = data.list[0].pop * 100;
+      localStorage.setItem("precipitation-today", data.list[0].pop * 100);
 
-      console.log(data.list[8].weather[0].description)
-      document.getElementById("description-tomorrow").innerHTML = data.list[8].weather[0].description;
-      document.getElementById("average-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp);
-      document.getElementById("high-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_max);
-      document.getElementById("low-temp-tomorrow").innerHTML = kToF(data.list[8].main.temp_min);
-      document.getElementById("precipitation-tomorrow").innerHTML = data.list[8].pop * 100;
-      document.getElementById("icon-tomorrow").src = "https://img.icons8.com/plasticine/400/000000/" + icons[data.list[8].weather[0].icon] + ".png";
+      localStorage.setItem("description-tomorrow", data.list[8].weather[0].description);
+      localStorage.setItem("average-temp-tomorrow", kToF(data.list[8].main.temp));
+      localStorage.setItem("high-temp-tomorrow", kToF(data.list[8].main.temp_max));
+      localStorage.setItem("low-temp-tomorrow", kToF(data.list[8].main.temp_min));
+      localStorage.setItem("precipitation-tomorrow", data.list[8].pop * 100);
+      localStorage.setItem("icon-tomorrow", "https://img.icons8.com/plasticine/400/000000/" + icons[data.list[8].weather[0].icon] + ".png");
   });
+}
+function weatherRender() {
+    $("#description-today").html(localStorage.getItem("description-today"));
+    $("#current-temp-today").html(localStorage.getItem("current-temp-today"));
+    $("#high-temp-today").html(localStorage.getItem("high-temp-today"));
+    $("#low-temp-today").html(localStorage.getItem("low-temp-today"));
+    $("icon-today").attr("src", localStorage.getItem("icon-today"));
+    $("#precipitation-today").html(localStorage.getItem("precipitation-today"));
+
+    $("#description-tomorrow").html(localStorage.getItem("description-tomorrow"));
+    $("#average-temp-tomorrow").html(localStorage.getItem("average-temp-tomorrow"));
+    $("#high-temp-tomorrow").html(localStorage.getItem("high-temp-tomorrow"));
+    $("#low-temp-tomorrow").html(localStorage.getItem("low-temp-tomorrow"));
+    $("#precipitation-tomorrow").html(localStorage.getItem("precipitation-tomorrow"));
+    $("#icon-tomorrow").attr("src", localStorage.getItem("icon-tomorrow"));
 }
 
 var App = createClass( {
@@ -58,6 +73,7 @@ var App = createClass( {
 
   componentDidMount: function() {
       weatherUpdate();
+      setInterval(weatherRender, 100);
   },
 
   render: function() {
