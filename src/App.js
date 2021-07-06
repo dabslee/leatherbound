@@ -171,9 +171,23 @@ var App = createClass( {
       return (
         <div id="content-container">
           <div id="tohome" class="navigator" onClick={() => this.setState({page: "home"})}>&#12296;</div>
-          <div class="app-container">
-              <div class="app" style={{width: "80vw", height: "65vh"}}>
+          <div class="app-container" style={{display: "flex", flexDirection: "row"}}>
+              <div class="app" style={{width: "40vw", height: "65vh"}}>
+                  <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+                    <h1>Diary</h1>
+                    <label>Mood: <select>
+                        <option>Great</option>
+                        <option>Good</option>
+                        <option>Neutral</option>
+                        <option>Bad</option>
+                        <option>Terrible</option>
+                        </select></label>
+                    <button>Save Entry</button>
+                  </div>
                   <textarea id="diary-area" style={{width:"100%", height:"100%"}}>{diary}</textarea>
+              </div>
+              <div>
+                  <h2>Mood Calendar</h2>
               </div>
           </div>
         </div>
