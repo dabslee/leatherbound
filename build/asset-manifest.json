@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.2ae1e1f2.css",
+    "main.js": "/static/js/main.16fbab9c.js",
+    "static/media/varelaround.ttf": "/static/media/varelaround.3b7ffe17ffd5b4e3c72f.ttf",
+    "static/media/autumninnovember.ttf": "/static/media/autumninnovember.1c769926b79994579b66.ttf",
+    "static/media/Dear Sunshine.ttf": "/static/media/Dear Sunshine.ffaa4f67626244b068cd.ttf",
+    "static/media/simplicity.ttf": "/static/media/simplicity.c1d8c497eb719bd3a534.ttf",
+    "index.html": "/index.html",
+    "main.2ae1e1f2.css.map": "/static/css/main.2ae1e1f2.css.map",
+    "main.16fbab9c.js.map": "/static/js/main.16fbab9c.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2ae1e1f2.css",
+    "static/js/main.16fbab9c.js"
+  ]
+}
