@@ -62,15 +62,15 @@ function Root() {
                         style={{
                             marginTop: '5px',
                             background: 'transparent',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
+                            border: '1px solid rgba(128,128,128,0.4)',
+                            color: 'rgba(128,128,128,0.4)',
                             borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
                             padding: '2px 8px'
                         }}
                     >
-                        Settings
+                        🛠 Configure
                     </button>
                 </div>
             </div>

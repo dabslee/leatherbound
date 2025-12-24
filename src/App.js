@@ -67,6 +67,7 @@ class App extends Component {
         weatherUrl += `&id=${location}`;
         forecastUrl += `&id=${location}`;
     } else {
+        location = location.replaceAll(' ', '').replaceAll(', US', '') + ", US";
         weatherUrl += `&q=${location}`;
         forecastUrl += `&q=${location}`;
     }
@@ -162,7 +163,7 @@ class App extends Component {
                   <textarea id="notes-area" style={{width:"100%", height:"75%"}} defaultValue={notes}></textarea>
               </div>
               <div id="weather" className="app-double">
-                  <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather</h2>
+                  <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
                   <div style={{display:"flex", flexDirection:"row", fontSize:"x-large", fontWeight:"lighter", height:"75%"}}>
                       <div style={{width:"400px", display:"flex", marginLeft:"60px", marginTop:"20px"}}>
                           <p>
