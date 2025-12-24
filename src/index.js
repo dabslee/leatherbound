@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import './css/main.css';
 import './css/themeswitcher.css';
+import './css/settings.css';
 import App from './App';
 import DateComponent from './DateComponent';
 import SettingsModal from './SettingsModal';
