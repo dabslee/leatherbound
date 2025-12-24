@@ -24,10 +24,10 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    border: var(--post-outline-width) var(--post-outline-style) var(--post-outline-color);
+    border: var(--post-outline-width) var(--post-outline-color);
     position: relative;
     font-family: var(--body-font);
-    font-size: 1.1rem;
+    font-size: 20px;
 }
 
 .settings-modal-header {
@@ -39,7 +39,7 @@
 
 .settings-modal-header h2 {
     margin: 0;
-    font-size: 2rem;
+    font-size: 32px;
     font-family: 'DearSunshine';
     background-color: var(--highlighter6);
 }
@@ -47,7 +47,7 @@
 .settings-close-btn {
     background: transparent;
     border: none;
-    font-size: 1.5rem;
+    font-size: 24px;
     cursor: pointer;
     color: var(--text-color);
     transition: transform 0.2s;
@@ -71,7 +71,7 @@
     border: none;
     color: var(--text-color);
     font-family: var(--body-font);
-    font-size: 1.2rem;
+    font-size: 20px;
     opacity: 0.6;
     transition: opacity 0.2s, font-weight 0.2s;
     border-bottom: 4px solid transparent;
@@ -103,7 +103,7 @@
 .setting-row label {
     font-weight: bold;
     margin-bottom: 8px;
-    font-size: 1.1rem;
+    font-size: 20px;
 }
 
 .setting-row input[type="text"],
@@ -111,15 +111,15 @@
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: 20px;
     background-color: rgba(255, 255, 255, 0.8);
     color: black;
     font-family: var(--body-font);
 }
 
 [data-theme="dark"] .setting-row input[type="text"],
-[data-theme="dark"] .setting-row select {
-    background-color: rgba(0, 0, 0, 0.3);
+[data-theme="dark"] .setting-row select, [data-theme="dark"] .setting-row select option {
+    background-color: rgba(0, 0, 0, 0.8);
     color: var(--text-color);
     border-color: #555;
 }
@@ -136,8 +136,8 @@
 .link-edit-row h4 {
     margin-top: 0;
     margin-bottom: 15px;
-    font-family: 'AutumnInNovember';
-    font-size: 1.5rem;
+    font-family: 'Simplicity';
+    font-size: 24px;
 }
 
 .link-header {
@@ -154,7 +154,7 @@
     padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 20px;
     transition: background-color 0.2s;
     font-family: var(--body-font);
 }
