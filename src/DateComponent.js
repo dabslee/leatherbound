@@ -34,7 +34,7 @@ var DateComponent = createClass( {
     return (
       <div style={{display:"flex", flexDirection:"column"}}>
         <h1 id="date">{datestr}</h1>
-        <div class="sh" id="time">{timestr}</div>
+        <div className="sh" id="time">{timestr}</div>
       </div>
     );
   }
