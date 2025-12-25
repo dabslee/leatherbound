@@ -30,20 +30,21 @@
     --post-outline-style: dashed;
     --post-outline-color: #bbb;
     --post-outline-width: 2px;
+    color-scheme: dark;
 }
 
 ::selection {
     background-color: var(--highlighter6);
 }
 
-body{
+body {
     transition: var(--transition-time);
     margin: 2rem 4rem;
     font-family: var(--body-font);
     background-color: var(--paper-color);
     font-weight:600;
     color: var(--text-color);
-    font-size: 16px;
+    font-size: 20px;
 }
 
 figcaption{
@@ -54,10 +55,11 @@ h1 {
     font-family: 'AutumnInNovember';
     margin-bottom: 10px;
     font-weight: normal;
+    font-size: 30px;
 }
 h2 {
     text-transform: uppercase;
-    font-size: 40px;
+    font-size: var(--header-font-size, 40px);
     margin-top: 0;
     margin-bottom: 5px;
     font-weight: normal;
@@ -66,13 +68,13 @@ h2 {
     padding: 0 1rem;
 }
 .sh {
-    font-size: 30px;
+    font-size: 24px;
     font-style: italic;
     color: gray;
     font-family: var(--body-font);
 }
 #logo {
-    font-size: 25px;
+    font-size: 24px;
     font-family: 'VarelaRound';
     font-weight: bold;
     margin-top: 30px;
@@ -161,12 +163,20 @@ textarea {
     background-color: rgba(0,0,0,0);
     border-style: none;
     font-family: var(--body-font);
-    font-size: x-large;
     color: var(--text-color);
+    resize: none;
+    scrollbar-width: thin;
 }
 
 textarea:focus {
     outline: none;
+}
+
+#app-container textarea, #app-container p {
+    font-size: var(--body-font-size, 20px);
+}
+#app-container figcaption {
+    font-size: calc(var(--body-font-size, 20px) * 0.75);
 }
 
 a {
@@ -211,5 +221,5 @@ a:hover {
 }
 
 [data-theme="dark"] .drawn-icon {
-    filter: invert(1.8) saturate(1.1) hue-rotate(180deg);
+    filter: drop-shadow(1px 0 0 gray)    drop-shadow(-1px 0 0 gray)    drop-shadow(0 1px 0 gray)    drop-shadow(0 -1px 0 gray);
 }

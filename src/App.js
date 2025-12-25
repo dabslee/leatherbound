@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
 /* Weather */
-const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+export const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
 const iconMap = {
     "01d":"sun--v1",
     "01n":"bright-moon",
@@ -63,7 +63,13 @@ class App extends Component {
 
     if (!location) location = "Princeton, US";
 
-    if (/^\d+$/.test(location)) {
+    const isLatLon = typeof location === "string" && /^-?[\d.]+,-?[\d.]+$/.test(location.trim());
+
+    if (isLatLon) {
+        const [lat, lon] = location.split(",").map(part => part.trim());
+        weatherUrl += `&lat=${lat}&lon=${lon}`;
+        forecastUrl += `&lat=${lat}&lon=${lon}`;
+    } else if (/^\d+$/.test(location)) {
         weatherUrl += `&id=${location}`;
         forecastUrl += `&id=${location}`;
     } else {
@@ -140,14 +146,35 @@ class App extends Component {
               <div id="quicklinks" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter1)"}}>Quick Links</h2>
                   <div id="quicklinks-container">
-                      {settings.quickLinks && settings.quickLinks.map((link, i) => (
-                          link.url && link.title && (
-                            <a key={i} href={link.url} className="link-icon">
-                                <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
-                                <figcaption>{link.title}</figcaption>
-                            </a>
-                          )
-                      ))}
+                      {settings.quickLinks && settings.quickLinks.some(link => link.url && link.title) ? (
+                          settings.quickLinks.map((link, i) => (
+                              link.url && link.title && (
+                                <a key={i} href={link.url} className="link-icon">
+                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
+                                    <figcaption>{link.title}</figcaption>
+                                </a>
+                              )
+                          ))
+                      ) : (
+                          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', color: 'var(--text-color)'}}>
+                              <p>No quick links configured.</p>
+                              <button
+                                  onClick={this.props.openSettings}
+                                  style={{
+                                      background: 'transparent',
+                                      border: '1px solid var(--text-color)',
+                                      color: 'var(--text-color)',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      padding: '5px 10px',
+                                      fontSize: '1rem',
+                                      fontFamily: 'var(--body-font)'
+                                  }}
+                              >
+                                  Configure
+                              </button>
+                          </div>
+                      )}
                   </div>
               </div>
               <div id="todo" className="app-double">
@@ -164,8 +191,8 @@ class App extends Component {
               </div>
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
-                  <div style={{display:"flex", flexDirection:"row", fontSize:"x-large", fontWeight:"lighter", height:"75%"}}>
-                      <div style={{width:"400px", display:"flex", marginLeft:"60px", marginTop:"20px"}}>
+                  <div style={{display:"flex", flexDirection:"row", fontSize:"x-large", fontWeight:"lighter", height:"75%", justifyContent:"space-evenly", alignItems:"center"}}>
+                      <div style={{width:"400px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px"}}>
                           <p>
                               <b>- TODAY -</b><br/>
                               <span>{today.description}</span><br/>
@@ -174,9 +201,9 @@ class App extends Component {
                               Low: <span>{today.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{today.precipitation}</span>%
                           </p>
-                          {today.icon && <img src={today.icon} style={{height:"100px", margin:"10px"}} alt="weather-today"/>}
+                          {today.icon && <img class="drawn-icon" src={today.icon} style={{height:"100px"}} alt="weather-today"/>}
                       </div>
-                      <div style={{width:"400px", display:"flex", marginTop:"20px"}}>
+                      <div style={{width:"400px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px"}}>
                           <p>
                               <b>- TOMORROW -</b><br/>
                               <span>{tomorrow.description}</span><br/>
@@ -185,7 +212,7 @@ class App extends Component {
                               Low: <span>{tomorrow.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{tomorrow.precipitation}</span>%
                           </p>
-                          {tomorrow.icon && <img src={tomorrow.icon} style={{height:"100px", margin:"10px"}} alt="weather-tomorrow"/>}
+                          {tomorrow.icon && <img class="drawn-icon" src={tomorrow.icon} style={{height:"100px"}} alt="weather-tomorrow"/>}
                       </div>
                   </div>
               </div>
