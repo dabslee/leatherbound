@@ -159,8 +159,8 @@ h2 {
 
 .app {
     background-color: var(--post-color);
-    min-height: calc(2.7rem + 0.2rem); /* Changed to min-height */
-    height: auto; /* Allow growth */
+    min-height: calc(2.7rem + 0.2rem);
+    height: 100%; /* Force fill */
     width: 3.1rem;
     padding: 0.3rem;
     transition: var(--transition-time);
@@ -171,6 +171,7 @@ h2 {
     outline-width: var(--post-outline-width);
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent content overflow */
 }
 .app:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -178,8 +179,8 @@ h2 {
 
 .app-double {
     background-color: var(--post-color);
-    min-height: calc(2.7rem + 0.2rem); /* Changed to min-height */
-    height: auto; /* Allow growth */
+    min-height: calc(2.7rem + 0.2rem);
+    height: 100%; /* Force fill */
     width: calc(3.1rem*2 + 0.3rem);
     padding: 0.3rem;
     transition: var(--transition-time);
@@ -190,6 +191,7 @@ h2 {
     outline-width: var(--post-outline-width);
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent content overflow */
 }
 .app-double:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -234,6 +236,9 @@ a:hover {
     justify-content: center;
     flex-direction: row;
     flex-wrap: wrap;
+    flex: 1;
+    overflow-y: auto; /* Allow scrolling if links overflow */
+    min-height: 0; /* Allow shrinking */
 }
 
 .link-icon {
@@ -269,6 +274,10 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 0.5rem; /* Ensure symmetric padding */
+    }
+
     #content-container {
         flex-direction: column;
     }
@@ -278,15 +287,14 @@ a:hover {
         align-items: center;
         width: 100%;
         max-width: 100%;
-        padding: 1rem 0;
+        padding: 0; /* Let body padding handle edge spacing */
         height: auto;
         flex-wrap: nowrap;
     }
 
     .app, .app-double {
-        width: 90%;
-        max-width: 90%;
-        margin: 0.5rem 0;
+        width: 100%; /* Fill the container (which is inside body padding) */
+        margin: 0.15rem 0; /* Reduced gaps */
         height: auto;
         min-height: 2.7rem;
     }

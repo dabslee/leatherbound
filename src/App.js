@@ -179,15 +179,15 @@ class App extends Component {
               </div>
               <div id="todo" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter3)"}}>To do</h2>
-                  <textarea id="todo-area" style={{width:"100%", height:"75%"}} defaultValue={todo}></textarea>
+                  <textarea id="todo-area" defaultValue={todo}></textarea>
               </div>
               <div id="schedule" className="app">
                   <h2 style={{backgroundColor: "var(--highlighter2)"}}>Schedule</h2>
-                  <textarea id="schedule-area" style={{width:"100%", height:"75%"}} defaultValue={schedule}></textarea>
+                  <textarea id="schedule-area" defaultValue={schedule}></textarea>
               </div>
               <div id="notes" className="app">
                   <h2 style={{backgroundColor: "var(--highlighter4)"}}>Notes</h2>
-                  <textarea id="notes-area" style={{width:"100%", height:"75%"}} defaultValue={notes}></textarea>
+                  <textarea id="notes-area" defaultValue={notes}></textarea>
               </div>
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
