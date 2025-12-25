@@ -115,6 +115,9 @@ export default class SettingsModal extends Component {
             try {
                 const data = JSON.parse(e.target.result);
                 if (typeof data === 'object' && data !== null) {
+                    // Remove the onunload listener to prevent overwriting
+                    window.onunload = null;
+
                     // Clear current localStorage and import new data
                     localStorage.clear();
                     Object.entries(data).forEach(([key, value]) => {
