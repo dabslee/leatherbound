@@ -226,4 +226,8 @@ a:hover {
 
 [data-theme="dark"] .drawn-icon {
     filter: drop-shadow(1px 0 0 gray)    drop-shadow(-1px 0 0 gray)    drop-shadow(0 1px 0 gray)    drop-shadow(0 -1px 0 gray);
+}@media (max-aspect-ratio: 1.4/1) {
+    #app-container {
+        max-width: 9rem;
+    }
 }

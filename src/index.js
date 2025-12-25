@@ -29,16 +29,31 @@ const defaultSettings = {
     ]
 };
 
-function Root() {
-    const saved = localStorage.getItem('leatherbound-settings');
-    let parsedSettings = null;
-    try {
-        parsedSettings = saved ? JSON.parse(saved) : null;
-    } catch (e) {
-        parsedSettings = null;
-    }
-    const hadSavedSettings = Boolean(parsedSettings);
-    const [settings, setSettings] = useState({ ...defaultSettings, ...(parsedSettings || {}) });
+// Initial Load Logic to prevent FOUC
+const savedSettingsRaw = localStorage.getItem('leatherbound-settings');
+let parsedSettings = null;
+try {
+    parsedSettings = savedSettingsRaw ? JSON.parse(savedSettingsRaw) : null;
+} catch (e) {
+    parsedSettings = null;
+}
+const initialSettings = { ...defaultSettings, ...(parsedSettings || {}) };
+
+// Apply initial settings immediately
+if (initialSettings.theme === 'system') {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+} else {
+    document.documentElement.setAttribute('data-theme', initialSettings.theme);
+}
+document.documentElement.style.setProperty('--body-font', initialSettings.font);
+document.documentElement.style.setProperty('--header-font', initialSettings.headerFont || 'DearSunshine');
+document.documentElement.style.setProperty('--body-font-size', (initialSettings.bodyFontSize || 20) / 100 + 'rem');
+document.documentElement.style.setProperty('--header-font-size', (initialSettings.headerFontSize || 40) / 100 + 'rem');
+
+
+function Root({ initialSettings, hadSavedSettings }) {
+    const [settings, setSettings] = useState(initialSettings);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
@@ -145,7 +160,7 @@ function Root() {
 
 /* React updater */
 ReactDOM.render(
-  <Root />,
+  <Root initialSettings={initialSettings} hadSavedSettings={Boolean(parsedSettings)} />,
   document.getElementById('root'),
   function() {
     window.onunload = function() {saveAreas();}
