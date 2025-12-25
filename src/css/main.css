@@ -118,7 +118,7 @@ h2 {
     width: 100%;
     flex: 1 0 auto;
     display: flex;
-    align-items: center;
+    align-items: stretch; /* Ensure app-container can fill height */
     justify-content: center;
 }
 
@@ -168,6 +168,8 @@ h2 {
     outline-style: var(--post-outline-style);
     outline-color: var(--post-outline-color);
     outline-width: var(--post-outline-width);
+    display: flex;
+    flex-direction: column;
 }
 .app:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -176,7 +178,7 @@ h2 {
 .app-double {
     background-color: var(--post-color);
     height: calc(2.7rem + 0.2rem);
-    width: calc(3.1rem*2 + 0.9rem);
+    width: calc(3.1rem*2 + 0.3rem); /* Adjusted from 0.9rem to 0.3rem to match gap */
     padding: 0.3rem;
     transition: var(--transition-time);
     margin: 0.15rem;
@@ -184,6 +186,8 @@ h2 {
     outline-style: var(--post-outline-style);
     outline-color: var(--post-outline-color);
     outline-width: var(--post-outline-width);
+    display: flex;
+    flex-direction: column;
 }
 .app-double:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -196,6 +200,9 @@ textarea {
     color: var(--text-color);
     resize: none;
     scrollbar-width: thin;
+    flex: 1; /* Allow flex resizing */
+    height: auto !important; /* Override inline height */
+    width: 100%;
 }
 
 textarea:focus {
@@ -259,6 +266,10 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+    #content-container {
+        flex-direction: column;
+    }
+
     #app-container {
         flex-direction: column;
         align-items: center;
