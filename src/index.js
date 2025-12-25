@@ -7,11 +7,16 @@ import App from './App';
 import DateComponent from './DateComponent';
 import SettingsModal from './SettingsModal';
 
+const weatherApiKey = process.env.REACT_APP_WEATHER_API_KEY;
+
 /* Default Settings */
 const defaultSettings = {
-    theme: 'light',
+    theme: 'system',
     font: 'Simplicity',
-    weatherLocation: 'Princeton, US', // Default ID used to be 5102922 which is Princeton
+    headerFont: 'DearSunshine',
+    bodyFontSize: 20,
+    headerFontSize: 40,
+    weatherLocation: '', // Set via geolocation on first load
     quickLinks: [
         { title: 'Mail', url: 'https://www.gmail.com', icon: 'gmail' },
         { title: 'Drive', url: 'https://www.drive.google.com', icon: 'google-drive' },
@@ -25,11 +30,55 @@ const defaultSettings = {
 };
 
 function Root() {
-    const [settings, setSettings] = useState(() => {
-        const saved = localStorage.getItem('leatherbound-settings');
-        return saved ? JSON.parse(saved) : defaultSettings;
-    });
+    const saved = localStorage.getItem('leatherbound-settings');
+    let parsedSettings = null;
+    try {
+        parsedSettings = saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        parsedSettings = null;
+    }
+    const hadSavedSettings = Boolean(parsedSettings);
+    const [settings, setSettings] = useState({ ...defaultSettings, ...(parsedSettings || {}) });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    useEffect(() => {
+        if ((hadSavedSettings && settings.weatherLocation) || !navigator.geolocation || !weatherApiKey) return;
+        let cancelled = false;
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                const lat = coords.latitude;
+                const lon = coords.longitude;
+                fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${weatherApiKey}`)
+                    .then(resp => resp.ok ? resp.json() : Promise.reject())
+                    .then(data => {
+                        if (cancelled || !Array.isArray(data) || data.length === 0) return;
+                        const city = data[0].name;
+                        const state = data[0].state;
+                        if (city) {
+                            setSettings(prev => ({
+                                ...prev,
+                                weatherLocation: state ? `${city}, ${state}` : city
+                            }));
+                            return;
+                        }
+                        setSettings(prev => ({
+                            ...prev,
+                            weatherLocation: `${lat},${lon}`
+                        }));
+                    })
+                    .catch(() => {
+                        if (cancelled) return;
+                        setSettings(prev => ({
+                            ...prev,
+                            weatherLocation: `${lat},${lon}`
+                        }));
+                    });
+            },
+            () => {},
+            { timeout: 5000 }
+        );
+        return () => { cancelled = true; };
+    }, [hadSavedSettings, settings.weatherLocation]);
 
     useEffect(() => {
         // Apply Theme
@@ -42,6 +91,9 @@ function Root() {
 
         // Apply Font
         document.documentElement.style.setProperty('--body-font', settings.font);
+        document.documentElement.style.setProperty('--header-font', settings.headerFont || 'DearSunshine');
+        document.documentElement.style.setProperty('--body-font-size', (settings.bodyFontSize || 20) + 'px');
+        document.documentElement.style.setProperty('--header-font-size', (settings.headerFontSize || 40) + 'px');
 
         // Save settings
         localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
@@ -74,7 +126,7 @@ function Root() {
                     </button>
                 </div>
             </div>
-            <App settings={settings} />
+            <App settings={settings} openSettings={() => setIsSettingsOpen(true)} />
             <div id="footer-container">
                 <p>&#169; Brandon Lee, {new Date().getFullYear()} &#8226; all rights reserved</p>
                 <div style={{display:"flex", flexDirection: "row", alignItems: "center"}}>
