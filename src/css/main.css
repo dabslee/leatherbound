@@ -57,9 +57,6 @@ body {
     font-weight:600;
     color: var(--text-color);
     font-size: 0.2rem;
-    /* Desktop default: Constrain height to viewport */
-    height: 100vh;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -137,7 +134,6 @@ h2 {
     flex: 1 0;
     align-items: stretch;
     justify-content: center;
-    overflow-y: auto; /* Scrollable grid */
 }
 
 #footer-container {
@@ -164,7 +160,8 @@ h2 {
 
 .app {
     background-color: var(--post-color);
-    height: 2.9rem;
+    min-height: 2.9rem;
+    height: auto;
     width: 3.1rem;
     padding: 0.3rem;
     transition: var(--transition-time);
@@ -182,7 +179,8 @@ h2 {
 
 .app-double {
     background-color: var(--post-color);
-    height: 2.9rem;
+    min-height: 2.9rem;
+    height: auto;
     width: calc(3.1rem*2 + 0.3rem);
     padding: 0.3rem;
     transition: var(--transition-time);
@@ -268,7 +266,26 @@ a:hover {
 
 [data-theme="dark"] .drawn-icon {
     filter: drop-shadow(1px 0 0 gray)    drop-shadow(-1px 0 0 gray)    drop-shadow(0 1px 0 gray)    drop-shadow(0 -1px 0 gray);
-}@media (max-aspect-ratio: 1.4/1) {
+}
+
+.weather-content {
+    display: flex;
+    flex-direction: row;
+    font-size: x-large;
+    font-weight: lighter;
+    height: 75%;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+@media (min-width: 769px) and (min-aspect-ratio: 1.4/1) {
+    .app, .app-double {
+        height: 2.9rem;
+        overflow: hidden;
+    }
+}
+
+@media (max-aspect-ratio: 1.4/1) {
     #app-container {
         max-width: 9rem;
     }
@@ -303,7 +320,12 @@ a:hover {
         padding: 0;
         height: auto; /* Let it grow */
         flex-wrap: nowrap;
-        overflow-y: visible; /* No internal scroll on mobile, scroll body instead */
+    }
+
+    .weather-content {
+        flex-direction: column;
+        height: auto;
+        gap: 0.5rem;
     }
 
     .app, .app-double {

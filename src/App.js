@@ -191,7 +191,7 @@ class App extends Component {
               </div>
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
-                  <div style={{display:"flex", flexDirection:"row", fontSize:"x-large", fontWeight:"lighter", height:"75%", justifyContent:"space-evenly", alignItems:"center"}}>
+                  <div className="weather-content">
                       <div style={{width:"4rem", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.16rem"}}>
                           <p>
                               <b>- TODAY -</b><br/>
