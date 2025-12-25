@@ -216,32 +216,32 @@ export default class SettingsModal extends Component {
         const { settings } = this.props;
         return (
             <div className="settings-tab-content">
-                <div style={{marginBottom: '20px', display: 'flex', gap: '10px'}}>
+                <div style={{marginBottom: '0.2rem', display: 'flex', gap: '0.1rem'}}>
                     <button
                         onClick={this.exportLinks}
                         style={{
-                            padding: '8px 12px',
+                            padding: '0.08rem 0.12rem',
                             cursor: 'pointer',
                             background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
+                            border: '0.01rem solid var(--text-color)',
                             color: 'var(--text-color)',
-                            borderRadius: '4px',
+                            borderRadius: '0.04rem',
                             fontFamily: 'var(--body-font)',
-                            fontSize: '16px'
+                            fontSize: '0.16rem'
                         }}
                     >
                         Export Links
                     </button>
                     <label
                         style={{
-                            padding: '8px 12px',
+                            padding: '0.08rem 0.12rem',
                             cursor: 'pointer',
                             background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
+                            border: '0.01rem solid var(--text-color)',
                             color: 'var(--text-color)',
-                            borderRadius: '4px',
+                            borderRadius: '0.04rem',
                             fontFamily: 'var(--body-font)',
-                            fontSize: '16px',
+                            fontSize: '0.16rem',
                             display: 'inline-block'
                         }}
                     >

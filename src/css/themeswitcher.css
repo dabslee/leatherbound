@@ -1,14 +1,14 @@
 .theme-switch-wrapper {
     display: flex;
     align-items: center;
-    margin: 0px 30px;
+    margin: 0 0.3rem;
 }
 
 .theme-switch {
     display: inline-block;
-    height: 20px;
+    height: 0.2rem;
     position: relative;
-    width: 40px;
+    width: 0.4rem;
 }
 
 .theme-switch input {
@@ -28,13 +28,13 @@
 
 .slider:before {
     background-color: #ddd;
-    bottom: 5px;
+    bottom: 0.05rem;
     content: "";
-    height: 10px;
-    left: 5px;
+    height: 0.1rem;
+    left: 0.05rem;
     position: absolute;
     transition: .4s;
-    width: 10px;
+    width: 0.1rem;
 }
 
 input:checked + .slider {
@@ -42,11 +42,11 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-    transform: translateX(20px);
+    transform: translateX(0.2rem);
 }
 
 .slider.round {
-    border-radius: 34px;
+    border-radius: 0.34rem;
 }
 
 .slider.round:before {
