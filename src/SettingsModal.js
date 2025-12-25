@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { apiKey } from './App';
 
 const iconGroups = {
     "Default": ['gmail', 'google-drive', 'google-calendar', 'fox', 'spotify', 'github--v1', 'blackboard-app', 'canvas-student'],
@@ -15,7 +16,9 @@ export default class SettingsModal extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            activeTab: 'general'
+            activeTab: 'general',
+            weatherStatus: null, // null, 'validating', 'valid', 'invalid'
+            weatherError: ''
         };
     }
 
@@ -53,6 +56,63 @@ export default class SettingsModal extends Component {
         this.updateSetting('quickLinks', newLinks);
     };
 
+    validateWeather = (location) => {
+        if (!location) return;
+
+        this.setState({ weatherStatus: 'validating', weatherError: '' });
+
+        let weatherUrl = `https://api.openweathermap.org/data/2.5/weather?appid=${apiKey}`;
+
+        if (/^\d+$/.test(location)) {
+            weatherUrl += `&id=${location}`;
+        } else {
+            const query = location.replaceAll(' ', '').replaceAll(',US', '') + ",US";
+            weatherUrl += `&q=${query}`;
+        }
+
+        fetch(weatherUrl)
+            .then(resp => {
+                if (!resp.ok) {
+                    throw new Error('City not found');
+                }
+                this.setState({ weatherStatus: 'valid' });
+            })
+            .catch(e => {
+                this.setState({ weatherStatus: 'invalid', weatherError: 'Location not found' });
+            });
+    };
+
+    exportLinks = () => {
+        const links = JSON.stringify(this.props.settings.quickLinks, null, 2);
+        const blob = new Blob([links], { type: 'text/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'quickLinks.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    importLinks = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const links = JSON.parse(e.target.result);
+                if (Array.isArray(links)) {
+                    this.updateSetting('quickLinks', links);
+                } else {
+                    alert('Invalid file format');
+                }
+            } catch (err) {
+                alert('Error parsing file');
+            }
+        };
+        reader.readAsText(file);
+    };
+
     renderGeneral() {
         const { settings } = this.props;
         return (
@@ -69,7 +129,7 @@ export default class SettingsModal extends Component {
                     </select>
                 </div>
                 <div className="setting-row">
-                    <label>Font</label>
+                    <label>Body Font</label>
                     <select
                         value={settings.font}
                         onChange={(e) => this.updateSetting('font', e.target.value)}
@@ -82,12 +142,50 @@ export default class SettingsModal extends Component {
                     </select>
                 </div>
                 <div className="setting-row">
-                    <label>Weather Location (City Name or ID)</label>
+                    <label>Header Font</label>
+                    <select
+                        value={settings.headerFont || 'DearSunshine'}
+                        onChange={(e) => this.updateSetting('headerFont', e.target.value)}
+                    >
+                        <option value="DearSunshine" style={{fontFamily: 'DearSunshine'}}>Dear Sunshine</option>
+                        <option value="AutumnInNovember" style={{fontFamily: 'AutumnInNovember'}}>Autumn In November</option>
+                        <option value="Simplicity" style={{fontFamily: 'Simplicity'}}>Simplicity</option>
+                        <option value="VarelaRound" style={{fontFamily: 'VarelaRound'}}>Varela Round</option>
+                        <option value="Arial" style={{fontFamily: 'Arial'}}>Arial</option>
+                        <option value="Times New Roman" style={{fontFamily: 'Times New Roman'}}>Times New Roman</option>
+                        <option value="Courier New" style={{fontFamily: 'Courier New'}}>Courier New</option>
+                    </select>
+                </div>
+                <div className="setting-row">
+                    <label>Font Size ({settings.fontSizeScale || 16}px)</label>
                     <input
-                        type="text"
-                        value={settings.weatherLocation}
-                        onChange={(e) => this.updateSetting('weatherLocation', e.target.value)}
+                        type="range"
+                        min="10"
+                        max="32"
+                        value={settings.fontSizeScale || 16}
+                        onChange={(e) => this.updateSetting('fontSizeScale', parseInt(e.target.value))}
+                        style={{width: "100%"}}
                     />
+                </div>
+                <div className="setting-row">
+                    <label>Weather Location (City Name or ID)</label>
+                    <div style={{display: 'flex', flexDirection: 'column'}}>
+                        <input
+                            type="text"
+                            value={settings.weatherLocation}
+                            onChange={(e) => {
+                                this.updateSetting('weatherLocation', e.target.value);
+                                this.setState({ weatherStatus: null, weatherError: '' });
+                            }}
+                            onBlur={(e) => this.validateWeather(e.target.value)}
+                            style={{
+                                borderColor: this.state.weatherStatus === 'invalid' ? 'red' :
+                                            this.state.weatherStatus === 'valid' ? 'green' : '#ccc'
+                            }}
+                        />
+                        {this.state.weatherStatus === 'validating' && <span style={{fontSize: '0.8rem', color: 'gray'}}>Validating...</span>}
+                        {this.state.weatherStatus === 'invalid' && <span style={{fontSize: '0.8rem', color: 'red'}}>{this.state.weatherError}</span>}
+                    </div>
                 </div>
             </div>
         );
@@ -97,6 +195,39 @@ export default class SettingsModal extends Component {
         const { settings } = this.props;
         return (
             <div className="settings-tab-content">
+                <div style={{marginBottom: '20px', display: 'flex', gap: '10px'}}>
+                    <button
+                        onClick={this.exportLinks}
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px'
+                        }}
+                    >
+                        Export Links
+                    </button>
+                    <label
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px',
+                            display: 'inline-block'
+                        }}
+                    >
+                        Import Links
+                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importLinks} />
+                    </label>
+                </div>
                 {settings.quickLinks.map((link, index) => (
                     <div key={index} className="link-edit-row">
                         <div className="link-header">
