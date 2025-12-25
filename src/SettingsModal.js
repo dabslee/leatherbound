@@ -238,6 +238,39 @@ export default class SettingsModal extends Component {
         const { settings } = this.props;
         return (
             <div className="settings-tab-content">
+                <div style={{marginBottom: '0.2rem', display: 'flex', gap: '0.1rem'}}>
+                    <button
+                        onClick={this.exportLinks}
+                        style={{
+                            padding: '0.08rem 0.12rem',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '0.01rem solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '0.04rem',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '0.16rem'
+                        }}
+                    >
+                        Export Links
+                    </button>
+                    <label
+                        style={{
+                            padding: '0.08rem 0.12rem',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '0.01rem solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '0.04rem',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '0.16rem',
+                            display: 'inline-block'
+                        }}
+                    >
+                        Import Links
+                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importLinks} />
+                    </label>
+                </div>
                 {settings.quickLinks.map((link, index) => (
                     <div key={index} className="link-edit-row">
                         <div className="link-header">
