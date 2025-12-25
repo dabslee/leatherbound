@@ -15,31 +15,31 @@
 .settings-modal-content {
     background-color: var(--paper-color);
     color: var(--text-color);
-    padding: 30px;
-    border-radius: 12px;
-    width: 600px;
+    padding: 0.3rem;
+    border-radius: 0.12rem;
+    width: 6rem;
     max-width: 90%;
     max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.2);
     border: var(--post-outline-width) var(--post-outline-color);
     position: relative;
     font-family: var(--body-font);
-    font-size: 20px;
+    font-size: 0.2rem;
 }
 
 .settings-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 0.2rem;
 }
 
 .settings-modal-header h2 {
     margin: 0;
-    font-size: 32px;
+    font-size: 0.32rem;
     font-family: 'DearSunshine';
     background-color: var(--highlighter6);
 }
@@ -47,7 +47,7 @@
 .settings-close-btn {
     background: transparent;
     border: none;
-    font-size: 24px;
+    font-size: 0.24rem;
     cursor: pointer;
     color: var(--text-color);
     transition: transform 0.2s;
@@ -60,22 +60,22 @@
 
 .modal-tabs {
     display: flex;
-    border-bottom: 2px solid var(--text-color);
-    margin-bottom: 20px;
+    border-bottom: 0.02rem solid var(--text-color);
+    margin-bottom: 0.2rem;
 }
 
 .tab-btn {
-    padding: 10px 20px;
+    padding: 0.1rem 0.2rem;
     cursor: pointer;
     background: transparent;
     border: none;
     color: var(--text-color);
     font-family: var(--body-font);
-    font-size: 20px;
+    font-size: 0.2rem;
     opacity: 0.6;
     transition: opacity 0.2s, font-weight 0.2s;
-    border-bottom: 4px solid transparent;
-    margin-bottom: -4px;
+    border-bottom: 0.04rem solid transparent;
+    margin-bottom: -0.04rem;
 }
 
 .tab-btn:hover {
@@ -85,33 +85,33 @@
 .tab-btn.active {
     opacity: 1;
     font-weight: bold;
-    border-bottom: 4px solid var(--highlighter4);
+    border-bottom: 0.04rem solid var(--highlighter4);
 }
 
 .settings-tab-content {
     flex: 1;
     overflow-y: auto;
-    padding-right: 10px;
+    padding-right: 0.1rem;
 }
 
 .setting-row {
     display: flex;
     flex-direction: column;
-    margin-bottom: 20px;
+    margin-bottom: 0.2rem;
 }
 
 .setting-row label {
     font-weight: bold;
-    margin-bottom: 8px;
-    font-size: 20px;
+    margin-bottom: 0.08rem;
+    font-size: 0.2rem;
 }
 
 .setting-row input[type="text"],
 .setting-row select {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 20px;
+    padding: 0.1rem;
+    border: 0.01rem solid #ccc;
+    border-radius: 0.06rem;
+    font-size: 0.2rem;
     background-color: rgba(255, 255, 255, 0.8);
     color: black;
     font-family: var(--body-font);
@@ -126,35 +126,35 @@
 
 .link-edit-row {
     background-color: var(--post-color);
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    padding: 0.2rem;
+    border-radius: 0.08rem;
+    margin-bottom: 0.2rem;
     position: relative;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 0.01rem solid rgba(0,0,0,0.1);
 }
 
 .link-edit-row h4 {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 0.15rem;
     font-family: 'Simplicity';
-    font-size: 24px;
+    font-size: 0.24rem;
 }
 
 .link-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 0.1rem;
 }
 
 .clear-link-btn {
     background-color: transparent;
-    border: 1px solid var(--text-color);
+    border: 0.01rem solid var(--text-color);
     color: var(--text-color);
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 0.04rem 0.08rem;
+    border-radius: 0.04rem;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 0.2rem;
     transition: background-color 0.2s;
     font-family: var(--body-font);
 }
@@ -169,15 +169,15 @@
 }
 
 .icon-preview {
-    width: 40px;
-    height: 40px;
-    margin-left: 15px;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-left: 0.15rem;
     object-fit: contain;
 }
 
 /* Scrollbar styling for webkit */
 .settings-tab-content::-webkit-scrollbar {
-    width: 8px;
+    width: 0.08rem;
 }
 
 .settings-tab-content::-webkit-scrollbar-track {

@@ -150,7 +150,7 @@ class App extends Component {
                           settings.quickLinks.map((link, i) => (
                               link.url && link.title && (
                                 <a key={i} href={link.url} className="link-icon">
-                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
+                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"1rem"}} alt={link.title}/>
                                     <figcaption>{link.title}</figcaption>
                                 </a>
                               )
@@ -162,12 +162,12 @@ class App extends Component {
                                   onClick={this.props.openSettings}
                                   style={{
                                       background: 'transparent',
-                                      border: '1px solid var(--text-color)',
+                                      border: '0.01rem solid var(--text-color)',
                                       color: 'var(--text-color)',
-                                      borderRadius: '4px',
+                                      borderRadius: '0.04rem',
                                       cursor: 'pointer',
-                                      padding: '5px 10px',
-                                      fontSize: '1rem',
+                                      padding: '0.05rem 0.1rem',
+                                      fontSize: '0.16rem',
                                       fontFamily: 'var(--body-font)'
                                   }}
                               >
@@ -192,7 +192,7 @@ class App extends Component {
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
                   <div style={{display:"flex", flexDirection:"row", fontSize:"x-large", fontWeight:"lighter", height:"75%", justifyContent:"space-evenly", alignItems:"center"}}>
-                      <div style={{width:"400px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px"}}>
+                      <div style={{width:"4rem", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.16rem"}}>
                           <p>
                               <b>- TODAY -</b><br/>
                               <span>{today.description}</span><br/>
@@ -201,9 +201,9 @@ class App extends Component {
                               Low: <span>{today.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{today.precipitation}</span>%
                           </p>
-                          {today.icon && <img class="drawn-icon" src={today.icon} style={{height:"100px"}} alt="weather-today"/>}
+                          {today.icon && <img class="drawn-icon" src={today.icon} style={{height:"1rem"}} alt="weather-today"/>}
                       </div>
-                      <div style={{width:"400px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px"}}>
+                      <div style={{width:"4rem", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.16rem"}}>
                           <p>
                               <b>- TOMORROW -</b><br/>
                               <span>{tomorrow.description}</span><br/>
@@ -212,7 +212,7 @@ class App extends Component {
                               Low: <span>{tomorrow.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{tomorrow.precipitation}</span>%
                           </p>
-                          {tomorrow.icon && <img class="drawn-icon" src={tomorrow.icon} style={{height:"100px"}} alt="weather-tomorrow"/>}
+                          {tomorrow.icon && <img class="drawn-icon" src={tomorrow.icon} style={{height:"1rem"}} alt="weather-tomorrow"/>}
                       </div>
                   </div>
               </div>

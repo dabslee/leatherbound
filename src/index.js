@@ -92,8 +92,8 @@ function Root() {
         // Apply Font
         document.documentElement.style.setProperty('--body-font', settings.font);
         document.documentElement.style.setProperty('--header-font', settings.headerFont || 'DearSunshine');
-        document.documentElement.style.setProperty('--body-font-size', (settings.bodyFontSize || 20) + 'px');
-        document.documentElement.style.setProperty('--header-font-size', (settings.headerFontSize || 40) + 'px');
+        document.documentElement.style.setProperty('--body-font-size', (settings.bodyFontSize || 20) / 100 + 'rem');
+        document.documentElement.style.setProperty('--header-font-size', (settings.headerFontSize || 40) / 100 + 'rem');
 
         // Save settings
         localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
@@ -112,14 +112,14 @@ function Root() {
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         style={{
-                            marginTop: '5px',
+                            marginTop: '0.05rem',
                             background: 'transparent',
-                            border: '1px solid rgba(128,128,128,0.4)',
+                            border: '0.01rem solid rgba(128,128,128,0.4)',
                             color: 'rgba(128,128,128,0.4)',
-                            borderRadius: '4px',
+                            borderRadius: '0.04rem',
                             cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            padding: '2px 8px'
+                            fontSize: '0.128rem',
+                            padding: '0.02rem 0.08rem'
                         }}
                     >
                         🛠 Configure
