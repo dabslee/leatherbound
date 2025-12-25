@@ -82,27 +82,46 @@ export default class SettingsModal extends Component {
             });
     };
 
-    exportLinks = () => {
-        const links = JSON.stringify(this.props.settings.quickLinks, null, 2);
-        const blob = new Blob([links], { type: 'text/json' });
+    exportData = () => {
+        // Collect all data from localStorage
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            data[key] = localStorage.getItem(key);
+        }
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'text/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'quickLinks.json';
+        a.download = 'leatherbound-data.json';
         a.click();
         URL.revokeObjectURL(url);
     };
 
-    importLinks = (event) => {
+    importData = (event) => {
         const file = event.target.files[0];
         if (!file) return;
+
+        const confirmImport = window.confirm("This will overwrite your current settings and data. Are you sure?");
+        if (!confirmImport) {
+            event.target.value = null; // Reset input
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const links = JSON.parse(e.target.result);
-                if (Array.isArray(links)) {
-                    this.updateSetting('quickLinks', links);
+                const data = JSON.parse(e.target.result);
+                if (typeof data === 'object' && data !== null) {
+                    // Clear current localStorage and import new data
+                    localStorage.clear();
+                    Object.entries(data).forEach(([key, value]) => {
+                        localStorage.setItem(key, value);
+                    });
+                    alert('Data imported successfully. The page will now reload.');
+                    window.location.reload();
                 } else {
                     alert('Invalid file format');
                 }
@@ -216,39 +235,6 @@ export default class SettingsModal extends Component {
         const { settings } = this.props;
         return (
             <div className="settings-tab-content">
-                <div style={{marginBottom: '20px', display: 'flex', gap: '10px'}}>
-                    <button
-                        onClick={this.exportLinks}
-                        style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
-                            borderRadius: '4px',
-                            fontFamily: 'var(--body-font)',
-                            fontSize: '16px'
-                        }}
-                    >
-                        Export Links
-                    </button>
-                    <label
-                        style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
-                            borderRadius: '4px',
-                            fontFamily: 'var(--body-font)',
-                            fontSize: '16px',
-                            display: 'inline-block'
-                        }}
-                    >
-                        Import Links
-                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importLinks} />
-                    </label>
-                </div>
                 {settings.quickLinks.map((link, index) => (
                     <div key={index} className="link-edit-row">
                         <div className="link-header">
@@ -302,6 +288,47 @@ export default class SettingsModal extends Component {
         );
     }
 
+    renderData() {
+        return (
+            <div className="settings-tab-content">
+                <p>Export or Import your entire Leatherbound configuration (Settings, Quick Links, Notes, etc).</p>
+                <div style={{marginTop: '20px', display: 'flex', gap: '10px'}}>
+                    <button
+                        onClick={this.exportData}
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px'
+                        }}
+                    >
+                        Export Data
+                    </button>
+                    <label
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px',
+                            display: 'inline-block'
+                        }}
+                    >
+                        Import Data
+                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importData} />
+                    </label>
+                </div>
+            </div>
+        );
+    }
+
     render() {
         if (!this.props.isOpen) return null;
 
@@ -328,9 +355,17 @@ export default class SettingsModal extends Component {
                         >
                             Quick Links
                         </button>
+                        <button
+                            className={`tab-btn ${this.state.activeTab === 'data' ? 'active' : ''}`}
+                            onClick={() => this.setState({activeTab: 'data'})}
+                        >
+                            Data
+                        </button>
                     </div>
 
-                    {this.state.activeTab === 'general' ? this.renderGeneral() : this.renderLinks()}
+                    {this.state.activeTab === 'general' && this.renderGeneral()}
+                    {this.state.activeTab === 'links' && this.renderLinks()}
+                    {this.state.activeTab === 'data' && this.renderData()}
                 </div>
             </div>
         );

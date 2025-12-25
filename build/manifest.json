@@ -14,9 +14,5 @@
   },
   "action": {
     "default_title": "Leatherbound"
-  },
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  }
 }
