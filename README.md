@@ -4,6 +4,8 @@
 
 Leatherbound is a custom new tab page for Google Chrome built with React. It replaces the default new tab page with a configurable dashboard featuring quick links, to-do lists, schedule management, notes, and weather updates. The application features a clean, leather-bound journal aesthetic with customizable fonts and themes.
 
+![screenshot](src/assets/img/leatherbound_screenshot.png)
+
 ## Key Features
 
 *   **Quick Links:** Customizable shortcuts to your favorite websites with a variety of icon options.
