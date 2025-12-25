@@ -99,7 +99,6 @@ h2 {
     flex-direction: column;
     flex: 1;
     width: 100%;
-    overflow: hidden; /* Propagate constraint */
 }
 
 #header-container {
@@ -120,7 +119,6 @@ h2 {
     display: flex;
     align-items: stretch;
     justify-content: center;
-    overflow: hidden; /* Propagate constraint */
 }
 
 #app-container {
@@ -171,7 +169,6 @@ h2 {
     outline-width: var(--post-outline-width);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 .app:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -190,7 +187,6 @@ h2 {
     outline-width: var(--post-outline-width);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 .app-double:hover {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
@@ -281,7 +277,6 @@ a:hover {
 @media (min-width: 769px) and (min-aspect-ratio: 1.4/1) {
     .app, .app-double {
         height: 2.9rem;
-        overflow: hidden;
     }
 }
 
@@ -296,19 +291,15 @@ a:hover {
         /* Restore mobile scrolling behavior */
         height: auto;
         min-height: 100vh;
-        overflow: visible;
-        overflow-x: hidden;
         padding: 0.5rem;
     }
 
     #root {
-        overflow: visible;
         height: auto;
     }
 
     #content-container {
         flex-direction: column;
-        overflow: visible;
         height: auto;
     }
 
