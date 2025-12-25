@@ -17,11 +17,17 @@ Leatherbound is a custom new tab page for Google Chrome built with React. It rep
 ## Installation
 
 1.  Download the repository as a zip file and then unpack.
-2.  Go to `chrome://extensions/` in your Chrome browser.
-3.  Turn on **Developer mode** in the top right corner.
-4.  Click the **Load unpacked** button.
-5.  Select the `build` folder inside the unpacked repository.
-6.  Open a new tab to see Leatherbound in action!
+2.  In the root folder, create a `.env` file containing two variables:
+    ```
+    INLINE_RUNTIME_CHUNK=false
+    REACT_APP_WEATHER_API_KEY=XXX
+    ```
+    You can create a free API key to use for `REACT_APP_WEATHER_API_KEY` [here](https://api.openweathermap.org).
+3.  Go to `chrome://extensions/` in your Chrome browser.
+4.  Turn on **Developer mode** in the top right corner.
+5.  Click the **Load unpacked** button.
+6.  Select the `build` folder inside the unpacked repository.
+7.  Open a new tab to see Leatherbound in action!
 
 ## Development
 
