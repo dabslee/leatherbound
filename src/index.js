@@ -11,6 +11,8 @@ import SettingsModal from './SettingsModal';
 const defaultSettings = {
     theme: 'light',
     font: 'Simplicity',
+    headerFont: 'DearSunshine',
+    fontSizeScale: 16,
     weatherLocation: 'Princeton, US', // Default ID used to be 5102922 which is Princeton
     quickLinks: [
         { title: 'Mail', url: 'https://www.gmail.com', icon: 'gmail' },
@@ -27,7 +29,9 @@ const defaultSettings = {
 function Root() {
     const [settings, setSettings] = useState(() => {
         const saved = localStorage.getItem('leatherbound-settings');
-        return saved ? JSON.parse(saved) : defaultSettings;
+        // Merge with defaultSettings to ensure new fields are present
+        const parsed = saved ? JSON.parse(saved) : defaultSettings;
+        return { ...defaultSettings, ...parsed };
     });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -42,6 +46,8 @@ function Root() {
 
         // Apply Font
         document.documentElement.style.setProperty('--body-font', settings.font);
+        document.documentElement.style.setProperty('--header-font', settings.headerFont || 'DearSunshine');
+        document.documentElement.style.setProperty('--base-font-size', (settings.fontSizeScale || 16) + 'px');
 
         // Save settings
         localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
@@ -74,7 +80,7 @@ function Root() {
                     </button>
                 </div>
             </div>
-            <App settings={settings} />
+            <App settings={settings} openSettings={() => setIsSettingsOpen(true)} />
             <div id="footer-container">
                 <p>&#169; Brandon Lee, {new Date().getFullYear()} &#8226; all rights reserved</p>
                 <div style={{display:"flex", flexDirection: "row", alignItems: "center"}}>

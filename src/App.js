@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
 /* Weather */
-const apiKey = "9237036ab7c0bf80dd4223ff17715372";
+export const apiKey = "9237036ab7c0bf80dd4223ff17715372";
 const iconMap = {
     "01d":"sun--v1",
     "01n":"bright-moon",
@@ -140,14 +140,35 @@ class App extends Component {
               <div id="quicklinks" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter1)"}}>Quick Links</h2>
                   <div id="quicklinks-container">
-                      {settings.quickLinks && settings.quickLinks.map((link, i) => (
-                          link.url && link.title && (
-                            <a key={i} href={link.url} className="link-icon">
-                                <img src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
-                                <figcaption>{link.title}</figcaption>
-                            </a>
-                          )
-                      ))}
+                      {settings.quickLinks && settings.quickLinks.some(link => link.url && link.title) ? (
+                          settings.quickLinks.map((link, i) => (
+                              link.url && link.title && (
+                                <a key={i} href={link.url} className="link-icon">
+                                    <img src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
+                                    <figcaption>{link.title}</figcaption>
+                                </a>
+                              )
+                          ))
+                      ) : (
+                          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', color: 'var(--text-color)'}}>
+                              <p>No quick links configured.</p>
+                              <button
+                                  onClick={this.props.openSettings}
+                                  style={{
+                                      background: 'transparent',
+                                      border: '1px solid var(--text-color)',
+                                      color: 'var(--text-color)',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      padding: '5px 10px',
+                                      fontSize: '1rem',
+                                      fontFamily: 'var(--body-font)'
+                                  }}
+                              >
+                                  Configure
+                              </button>
+                          </div>
+                      )}
                   </div>
               </div>
               <div id="todo" className="app-double">

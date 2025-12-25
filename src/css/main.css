@@ -36,6 +36,10 @@
     background-color: var(--highlighter6);
 }
 
+html {
+    font-size: var(--base-font-size, 16px);
+}
+
 body{
     transition: var(--transition-time);
     margin: 2rem 4rem;
@@ -43,7 +47,6 @@ body{
     background-color: var(--paper-color);
     font-weight:600;
     color: var(--text-color);
-    font-size: 16px;
 }
 
 figcaption{
@@ -51,28 +54,28 @@ figcaption{
 }
 
 h1 {
-    font-family: 'AutumnInNovember';
+    font-family: var(--header-font, 'AutumnInNovember');
     margin-bottom: 10px;
     font-weight: normal;
 }
 h2 {
     text-transform: uppercase;
-    font-size: 40px;
+    font-size: 2.5rem;
     margin-top: 0;
     margin-bottom: 5px;
     font-weight: normal;
-    font-family: 'DearSunshine';
+    font-family: var(--header-font, 'DearSunshine');
     width:fit-content;
     padding: 0 1rem;
 }
 .sh {
-    font-size: 30px;
+    font-size: 1.875rem;
     font-style: italic;
     color: gray;
     font-family: var(--body-font);
 }
 #logo {
-    font-size: 25px;
+    font-size: 1.5625rem;
     font-family: 'VarelaRound';
     font-weight: bold;
     margin-top: 30px;
