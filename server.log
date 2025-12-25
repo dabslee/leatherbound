@@ -1,0 +1,7 @@
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/css/main.d24b0368.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/js/main.15eed82f.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/media/simplicity.c1d8c497eb719bd3a534.ttf HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/media/autumninnovember.1c769926b79994579b66.ttf HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/media/Dear%20Sunshine.ffaa4f67626244b068cd.ttf HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 22:00:30] "GET /static/media/varelaround.3b7ffe17ffd5b4e3c72f.ttf HTTP/1.1" 200 -
