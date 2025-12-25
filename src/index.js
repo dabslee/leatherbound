@@ -12,7 +12,8 @@ const defaultSettings = {
     theme: 'light',
     font: 'Simplicity',
     headerFont: 'DearSunshine',
-    fontSizeScale: 16,
+    bodyFontSize: 16,
+    headerFontSize: 40,
     weatherLocation: 'Princeton, US', // Default ID used to be 5102922 which is Princeton
     quickLinks: [
         { title: 'Mail', url: 'https://www.gmail.com', icon: 'gmail' },
@@ -47,7 +48,8 @@ function Root() {
         // Apply Font
         document.documentElement.style.setProperty('--body-font', settings.font);
         document.documentElement.style.setProperty('--header-font', settings.headerFont || 'DearSunshine');
-        document.documentElement.style.setProperty('--base-font-size', (settings.fontSizeScale || 16) + 'px');
+        document.documentElement.style.setProperty('--body-font-size', (settings.bodyFontSize || 16) + 'px');
+        document.documentElement.style.setProperty('--header-font-size', (settings.headerFontSize || 40) + 'px');
 
         // Save settings
         localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
