@@ -22,7 +22,10 @@
 }
 
 html {
-    font-size: clamp(60px, 5.3476vw, 140px);
+    font-size: clamp(75px, 5.3476vw, 140px);
+    background-color: var(--paper-color);
+    transition: background-color var(--transition-time);
+    height: 100%;
 }
 
 [data-theme="dark"] {
@@ -46,13 +49,17 @@ html {
 }
 
 body {
-    transition: var(--transition-time);
-    margin: 0.32rem 0.64rem;
+    transition: color var(--transition-time), background-color var(--transition-time);
+    margin: 0;
+    padding: 0.32rem 0.64rem;
     font-family: var(--body-font);
-    background-color: var(--paper-color);
+    background-color: transparent;
     font-weight:600;
     color: var(--text-color);
     font-size: 0.2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 figcaption{
@@ -91,7 +98,8 @@ h2 {
 #root {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 1.28rem); /* 100vh - 2 * 0.64rem vertical margins */
+    flex: 1;
+    width: 100%;
 }
 
 #header-container {
