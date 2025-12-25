@@ -84,17 +84,27 @@ h2 {
     margin-top: 0.3rem;
 }
 
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 0.64rem); /* 100vh - body margins */
+}
+
 #header-container {
     width: 100%;
-    height: 1.28rem;
+    height: auto;
+    min-height: 1.28rem;
     display: flex;
     justify-content: space-between;
     user-select: none;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 0.2rem;
 }
 
 #content-container {
     width: 100%;
-    height: calc(100vh - 2.24rem);
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,10 +125,15 @@ h2 {
 
 #footer-container {
     width: 100%;
-    height: 0.16rem;
+    height: auto;
+    min-height: 0.16rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    padding-top: 0.5rem;
+    gap: 0.2rem;
 }
 .flower-box {
     width: 20%;
@@ -258,13 +273,21 @@ a:hover {
     }
 
     #header-container {
-        height: auto;
         flex-direction: column;
         align-items: center;
         margin-bottom: 0.5rem;
+        justify-content: center;
+        text-align: center;
     }
 
     #logo {
         margin-top: 0.1rem;
+    }
+
+    #footer-container {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        padding-bottom: 1rem;
     }
 }
