@@ -129,43 +129,64 @@ export default class SettingsModal extends Component {
                     </select>
                 </div>
                 <div className="setting-row">
-                    <label>Body Font</label>
-                    <select
-                        value={settings.font}
-                        onChange={(e) => this.updateSetting('font', e.target.value)}
-                    >
-                        <option value="Simplicity" style={{fontFamily: 'Simplicity'}}>Simplicity</option>
-                        <option value="VarelaRound" style={{fontFamily: 'VarelaRound'}}>Varela Round</option>
-                        <option value="Arial" style={{fontFamily: 'Arial'}}>Arial</option>
-                        <option value="Times New Roman" style={{fontFamily: 'Times New Roman'}}>Times New Roman</option>
-                        <option value="Courier New" style={{fontFamily: 'Courier New'}}>Courier New</option>
-                    </select>
+                    <label>Body Font & Size</label>
+                    <div style={{display: 'flex', gap: '10px'}}>
+                        <select
+                            value={settings.font}
+                            onChange={(e) => this.updateSetting('font', e.target.value)}
+                            style={{flex: 2}}
+                        >
+                            <option value="Simplicity" style={{fontFamily: 'Simplicity'}}>Simplicity</option>
+                            <option value="VarelaRound" style={{fontFamily: 'VarelaRound'}}>Varela Round</option>
+                            <option value="Arial" style={{fontFamily: 'Arial'}}>Arial</option>
+                            <option value="Times New Roman" style={{fontFamily: 'Times New Roman'}}>Times New Roman</option>
+                            <option value="Courier New" style={{fontFamily: 'Courier New'}}>Courier New</option>
+                        </select>
+                        <select
+                            value={settings.bodyFontSize || 16}
+                            onChange={(e) => this.updateSetting('bodyFontSize', parseInt(e.target.value))}
+                            style={{flex: 1}}
+                        >
+                            <option value="12">12px</option>
+                            <option value="14">14px</option>
+                            <option value="16">16px</option>
+                            <option value="18">18px</option>
+                            <option value="20">20px</option>
+                            <option value="24">24px</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="setting-row">
-                    <label>Header Font</label>
-                    <select
-                        value={settings.headerFont || 'DearSunshine'}
-                        onChange={(e) => this.updateSetting('headerFont', e.target.value)}
-                    >
-                        <option value="DearSunshine" style={{fontFamily: 'DearSunshine'}}>Dear Sunshine</option>
-                        <option value="AutumnInNovember" style={{fontFamily: 'AutumnInNovember'}}>Autumn In November</option>
-                        <option value="Simplicity" style={{fontFamily: 'Simplicity'}}>Simplicity</option>
-                        <option value="VarelaRound" style={{fontFamily: 'VarelaRound'}}>Varela Round</option>
-                        <option value="Arial" style={{fontFamily: 'Arial'}}>Arial</option>
-                        <option value="Times New Roman" style={{fontFamily: 'Times New Roman'}}>Times New Roman</option>
-                        <option value="Courier New" style={{fontFamily: 'Courier New'}}>Courier New</option>
-                    </select>
-                </div>
-                <div className="setting-row">
-                    <label>Font Size ({settings.fontSizeScale || 16}px)</label>
-                    <input
-                        type="range"
-                        min="10"
-                        max="32"
-                        value={settings.fontSizeScale || 16}
-                        onChange={(e) => this.updateSetting('fontSizeScale', parseInt(e.target.value))}
-                        style={{width: "100%"}}
-                    />
+                    <label>Header Font & Size</label>
+                    <div style={{display: 'flex', gap: '10px'}}>
+                        <select
+                            value={settings.headerFont || 'DearSunshine'}
+                            onChange={(e) => this.updateSetting('headerFont', e.target.value)}
+                            style={{flex: 2}}
+                        >
+                            <option value="DearSunshine" style={{fontFamily: 'DearSunshine'}}>Dear Sunshine</option>
+                            <option value="AutumnInNovember" style={{fontFamily: 'AutumnInNovember'}}>Autumn In November</option>
+                            <option value="Simplicity" style={{fontFamily: 'Simplicity'}}>Simplicity</option>
+                            <option value="VarelaRound" style={{fontFamily: 'VarelaRound'}}>Varela Round</option>
+                            <option value="Arial" style={{fontFamily: 'Arial'}}>Arial</option>
+                            <option value="Times New Roman" style={{fontFamily: 'Times New Roman'}}>Times New Roman</option>
+                            <option value="Courier New" style={{fontFamily: 'Courier New'}}>Courier New</option>
+                        </select>
+                        <select
+                            value={settings.headerFontSize || 40}
+                            onChange={(e) => this.updateSetting('headerFontSize', parseInt(e.target.value))}
+                            style={{flex: 1}}
+                        >
+                            <option value="20">20px</option>
+                            <option value="24">24px</option>
+                            <option value="30">30px</option>
+                            <option value="36">36px</option>
+                            <option value="40">40px</option>
+                            <option value="48">48px</option>
+                            <option value="60">60px</option>
+                            <option value="72">72px</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="setting-row">
                     <label>Weather Location (City Name or ID)</label>
