@@ -209,3 +209,7 @@ a:hover {
 .navigator:hover {
     opacity: 0.3;
 }
+
+[data-theme="dark"] .drawn-icon {
+    filter: invert(1.8) saturate(1.1) hue-rotate(180deg);
+}

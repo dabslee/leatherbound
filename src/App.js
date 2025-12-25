@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
 /* Weather */
-const apiKey = "9237036ab7c0bf80dd4223ff17715372";
+const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
 const iconMap = {
     "01d":"sun--v1",
     "01n":"bright-moon",
@@ -143,7 +143,7 @@ class App extends Component {
                       {settings.quickLinks && settings.quickLinks.map((link, i) => (
                           link.url && link.title && (
                             <a key={i} href={link.url} className="link-icon">
-                                <img src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
+                                <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
                                 <figcaption>{link.title}</figcaption>
                             </a>
                           )
