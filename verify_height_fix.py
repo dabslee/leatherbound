@@ -6,7 +6,6 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
 
 def run_server():
-    # Serve the current directory (which will be 'build')
     server = HTTPServer(('localhost', 3000), SimpleHTTPRequestHandler)
     print("Server started on port 3000")
     server.serve_forever()
@@ -14,66 +13,101 @@ def run_server():
 def verify():
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={'width': 1920, 'height': 1080})
-        page.goto('http://localhost:3000')
 
-        # Wait for app to load
-        try:
-            page.wait_for_selector('.app', timeout=5000)
-        except:
-            print("Timeout waiting for .app")
-            # snapshot
-            page.screenshot(path='error_snapshot.png')
-            sys.exit(1)
+        # 1. Wide Desktop Verification
+        # Expectation: Height is FIXED (approx 2.9rem), Content scrolls internally.
+        print("Verifying Wide Desktop (1920x1080)...")
+        page_wide = browser.new_page(viewport={'width': 1920, 'height': 1080})
+        page_wide.goto('http://localhost:3000')
+        page_wide.wait_for_selector('#quicklinks')
 
-        # Find an app with a textarea (e.g., Schedule or Notes)
-        app_handle = page.query_selector('.app:has(textarea)')
+        app = page_wide.query_selector('#quicklinks')
+        container = app.query_selector('#quicklinks-container')
 
-        if not app_handle:
-            print("No app with textarea found.")
-            sys.exit(1)
+        h1 = app.evaluate("el => el.getBoundingClientRect().height")
 
-        textarea = app_handle.query_selector('textarea')
+        # Inject many divs to force expansion if not constrained
+        page_wide.evaluate("""
+            const container = document.getElementById('quicklinks-container');
+            for(let i=0; i<50; i++) {
+                const div = document.createElement('div');
+                div.style.width = '100px';
+                div.style.height = '100px';
+                div.style.border = '1px solid black';
+                div.innerText = 'Item ' + i;
+                container.appendChild(div);
+            }
+        """)
 
-        # Get initial height
-        initial_height = app_handle.evaluate("el => el.getBoundingClientRect().height")
-        print(f"Initial height: {initial_height}")
+        page_wide.wait_for_timeout(500)
+        h2 = app.evaluate("el => el.getBoundingClientRect().height")
 
-        # Add a lot of text
-        long_text = "Line\n" * 50
-        textarea.fill(long_text)
-
-        # Wait a bit for layout update
-        page.wait_for_timeout(1000)
-
-        # Get new height
-        new_height = app_handle.evaluate("el => el.getBoundingClientRect().height")
-        print(f"New height: {new_height}")
-
-        diff = new_height - initial_height
-        print(f"Height difference: {diff}")
-
-        if diff > 10: # Allow small tolerance
-            print(f"FAIL: App grew by {diff}px")
-            browser.close()
-            sys.exit(1)
+        print(f"Wide Desktop Height: {h1} -> {h2}")
+        if abs(h2 - h1) > 10:
+            print("FAIL: Wide Desktop QuickLinks grew! Should be fixed.")
         else:
-            print("PASS: App height did not change significantly.")
-            browser.close()
-            sys.exit(0)
+            print("PASS: Wide Desktop QuickLinks height fixed.")
+
+        page_wide.close()
+
+        # 2. Narrow Desktop Verification (Max Aspect Ratio 1.4/1)
+        # Use 1000x1000 (AspectRatio 1.0).
+        # Expectation: Height GROWS to fit content.
+        print("Verifying Narrow Desktop (1000x1000)...")
+        page_narrow = browser.new_page(viewport={'width': 1000, 'height': 1000})
+        page_narrow.goto('http://localhost:3000')
+        page_narrow.wait_for_selector('#quicklinks')
+
+        app = page_narrow.query_selector('#quicklinks')
+
+        h1 = app.evaluate("el => el.getBoundingClientRect().height")
+
+        page_narrow.evaluate("""
+            const container = document.getElementById('quicklinks-container');
+            for(let i=0; i<50; i++) {
+                const div = document.createElement('div');
+                div.style.width = '100px';
+                div.style.height = '100px';
+                div.style.border = '1px solid black';
+                div.innerText = 'Item ' + i;
+                container.appendChild(div);
+            }
+        """)
+
+        page_narrow.wait_for_timeout(500)
+        h2 = app.evaluate("el => el.getBoundingClientRect().height")
+
+        print(f"Narrow Desktop Height: {h1} -> {h2}")
+        if h2 > h1 + 100:
+            print("PASS: Narrow Desktop QuickLinks grew as expected.")
+        else:
+            print("FAIL: Narrow Desktop QuickLinks DID NOT grow!")
+
+        page_narrow.close()
+
+        # 3. Mobile Verification
+        # Expectation: Weather is vertical.
+        print("Verifying Mobile (375x812)...")
+        page_mobile = browser.new_page(viewport={'width': 375, 'height': 812})
+        page_mobile.goto('http://localhost:3000')
+        page_mobile.wait_for_selector('.weather-content')
+
+        direction = page_mobile.eval_on_selector('.weather-content', 'el => window.getComputedStyle(el).flexDirection')
+        print(f"Mobile Weather Flex Direction: {direction}")
+
+        if direction == 'column':
+            print("PASS: Mobile weather is vertical.")
+        else:
+            print("FAIL: Mobile weather is not vertical.")
+
+        page_mobile.close()
+        browser.close()
 
 if __name__ == "__main__":
-    # Ensure we are in the build directory
-    if not os.path.exists('index.html'):
-        print("Error: index.html not found. Are you in the build directory?")
-        sys.exit(1)
-
     server_thread = threading.Thread(target=run_server)
     server_thread.daemon = True
     server_thread.start()
-
-    time.sleep(3) # Wait for server
-
+    time.sleep(3)
     try:
         verify()
     except Exception as e:
