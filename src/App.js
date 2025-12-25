@@ -150,7 +150,7 @@ class App extends Component {
                           settings.quickLinks.map((link, i) => (
                               link.url && link.title && (
                                 <a key={i} href={link.url} className="link-icon">
-                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
+                                    <img className="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"100px"}} alt={link.title}/>
                                     <figcaption>{link.title}</figcaption>
                                 </a>
                               )
@@ -201,7 +201,7 @@ class App extends Component {
                               Low: <span>{today.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{today.precipitation}</span>%
                           </p>
-                          {today.icon && <img class="drawn-icon" src={today.icon} style={{height:"100px"}} alt="weather-today"/>}
+                          {today.icon && <img className="drawn-icon" src={today.icon} style={{height:"100px"}} alt="weather-today"/>}
                       </div>
                       <div style={{width:"400px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px"}}>
                           <p>
@@ -212,7 +212,7 @@ class App extends Component {
                               Low: <span>{tomorrow.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{tomorrow.precipitation}</span>%
                           </p>
-                          {tomorrow.icon && <img class="drawn-icon" src={tomorrow.icon} style={{height:"100px"}} alt="weather-tomorrow"/>}
+                          {tomorrow.icon && <img className="drawn-icon" src={tomorrow.icon} style={{height:"100px"}} alt="weather-tomorrow"/>}
                       </div>
                   </div>
               </div>
