@@ -1,5 +1,9 @@
 @import url("fonts.css");
 
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --transition-time: 0.4s;
     --paper-color: rgb(242, 240, 238);
@@ -87,7 +91,7 @@ h2 {
 #root {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 0.64rem); /* 100vh - body margins */
+    min-height: calc(100vh - 1.28rem); /* 100vh - 2 * 0.64rem vertical margins */
 }
 
 #header-container {
