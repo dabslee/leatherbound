@@ -238,7 +238,7 @@ export default class SettingsModal extends Component {
         const { settings } = this.props;
         return (
             <div className="settings-tab-content">
-                <div style={{marginBottom: '0.2rem', display: 'flex', gap: '0.1rem'}}>
+                {/* <div style={{marginBottom: '0.2rem', display: 'flex', gap: '0.1rem'}}>
                     <button
                         onClick={this.exportLinks}
                         style={{
@@ -270,7 +270,7 @@ export default class SettingsModal extends Component {
                         Import Links
                         <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importLinks} />
                     </label>
-                </div>
+                </div> */}
                 {settings.quickLinks.map((link, index) => (
                     <div key={index} className="link-edit-row">
                         <div className="link-header">
