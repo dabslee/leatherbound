@@ -150,7 +150,7 @@ class App extends Component {
                           settings.quickLinks.map((link, i) => (
                               link.url && link.title && (
                                 <a key={i} href={link.url} className="link-icon">
-                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"1rem"}} alt={link.title}/>
+                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"0.9rem"}} alt={link.title}/>
                                     <figcaption>{link.title}</figcaption>
                                 </a>
                               )

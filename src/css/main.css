@@ -59,7 +59,15 @@ body {
     font-size: 0.2rem;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
+#root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+}
+
 
 figcaption{
     color: var(--text-color);
@@ -94,13 +102,6 @@ h2 {
     margin-top: 0.3rem;
 }
 
-#root {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    width: 100%;
-}
-
 #header-container {
     width: 100%;
     height: auto;
@@ -122,11 +123,10 @@ h2 {
 }
 
 #app-container {
-    padding: 0.32rem 0;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-content: stretch;
+    align-content: center;
     max-width: 100%;
     height: 100%;
     flex: 1 0;
@@ -160,7 +160,7 @@ h2 {
     background-color: var(--post-color);
     min-height: 2.9rem;
     height: auto;
-    width: 3.1rem;
+    width: 3.5rem;
     padding: 0.3rem;
     transition: var(--transition-time);
     margin: 0.15rem;
@@ -178,7 +178,7 @@ h2 {
     background-color: var(--post-color);
     min-height: 2.9rem;
     height: auto;
-    width: calc(3.1rem*2 + 0.3rem);
+    width: calc(3.5rem*2 + 0.3rem);
     padding: 0.3rem;
     transition: var(--transition-time);
     margin: 0.15rem;
@@ -232,7 +232,7 @@ a:hover {
     flex-direction: row;
     flex-wrap: wrap;
     flex: 1;
-    overflow-y: auto;
+    overflow-y: hidden;
     min-height: 0;
 }
 
@@ -276,7 +276,7 @@ a:hover {
 
 @media (min-width: 769px) and (min-aspect-ratio: 1.4/1) {
     .app, .app-double {
-        height: 2.9rem;
+        height: 3.5rem;
     }
 }
 
