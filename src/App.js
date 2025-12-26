@@ -179,15 +179,15 @@ class App extends Component {
                   </div>
               </div>
               <div id="todo" className="app-double">
-                  <h2 style={{backgroundColor: "var(--highlighter3)"}}>To do</h2>
+                  <h2 style={{backgroundColor: "var(--highlighter3)"}}>{settings.todoName || "To do"}</h2>
                   <RichTextEditor id="todo-area" className="rich-text-area" defaultValue={todo} />
               </div>
               <div id="schedule" className="app">
-                  <h2 style={{backgroundColor: "var(--highlighter2)"}}>Schedule</h2>
+                  <h2 style={{backgroundColor: "var(--highlighter2)"}}>{settings.scheduleName || "Schedule"}</h2>
                   <RichTextEditor id="schedule-area" className="rich-text-area" defaultValue={schedule} />
               </div>
               <div id="notes" className="app">
-                  <h2 style={{backgroundColor: "var(--highlighter4)"}}>Notes</h2>
+                  <h2 style={{backgroundColor: "var(--highlighter4)"}}>{settings.notesName || "Notes"}</h2>
                   <RichTextEditor id="notes-area" className="rich-text-area" defaultValue={notes} />
               </div>
               <div id="weather" className="app-double">
