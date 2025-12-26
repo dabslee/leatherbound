@@ -230,10 +230,14 @@ export default class SettingsModal extends Component {
                         {this.state.weatherStatus === 'invalid' && <span style={{fontSize: '0.8rem', color: 'red'}}>{this.state.weatherError}</span>}
                     </div>
                 </div>
+            </div>
+        );
+    }
 
-                <hr style={{margin: '20px 0', border: '0', borderTop: '1px solid var(--text-color)', opacity: 0.3}} />
-                <h3>Section Names</h3>
-
+    renderSections() {
+        const { settings } = this.props;
+        return (
+            <div className="settings-tab-content">
                 <div className="setting-row">
                     <label>To Do Section</label>
                     <input
@@ -417,6 +421,12 @@ export default class SettingsModal extends Component {
                             General
                         </button>
                         <button
+                            className={`tab-btn ${this.state.activeTab === 'sections' ? 'active' : ''}`}
+                            onClick={() => this.setState({activeTab: 'sections'})}
+                        >
+                            Sections
+                        </button>
+                        <button
                             className={`tab-btn ${this.state.activeTab === 'links' ? 'active' : ''}`}
                             onClick={() => this.setState({activeTab: 'links'})}
                         >
@@ -431,6 +441,7 @@ export default class SettingsModal extends Component {
                     </div>
 
                     {this.state.activeTab === 'general' && this.renderGeneral()}
+                    {this.state.activeTab === 'sections' && this.renderSections()}
                     {this.state.activeTab === 'links' && this.renderLinks()}
                     {this.state.activeTab === 'data' && this.renderData()}
                 </div>
