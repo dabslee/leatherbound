@@ -174,6 +174,6 @@ function saveAreas(){
   var names = ["schedule", "todo", "notes", "diary"];
   for (var i = 0; i < names.length; i++){
       var area = document.getElementById(names[i] + "-area");
-      if (area) localStorage.setItem(names[i], area.value);
+      if (area) localStorage.setItem(names[i], area.innerHTML);
   }
 }

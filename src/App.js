@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import RichTextEditor from "./RichTextEditor";
 
 /* Weather */
 export const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
@@ -179,15 +180,15 @@ class App extends Component {
               </div>
               <div id="todo" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter3)"}}>To do</h2>
-                  <textarea id="todo-area" defaultValue={todo}></textarea>
+                  <RichTextEditor id="todo-area" className="rich-text-area" defaultValue={todo} />
               </div>
               <div id="schedule" className="app">
                   <h2 style={{backgroundColor: "var(--highlighter2)"}}>Schedule</h2>
-                  <textarea id="schedule-area" defaultValue={schedule}></textarea>
+                  <RichTextEditor id="schedule-area" className="rich-text-area" defaultValue={schedule} />
               </div>
               <div id="notes" className="app">
                   <h2 style={{backgroundColor: "var(--highlighter4)"}}>Notes</h2>
-                  <textarea id="notes-area" defaultValue={notes}></textarea>
+                  <RichTextEditor id="notes-area" className="rich-text-area" defaultValue={notes} />
               </div>
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
@@ -227,7 +228,7 @@ class App extends Component {
           <div id="tohome" className="navigator" onClick={() => this.setState({page: "home"})}>&#12296;</div>
           <div className="app-container">
               <div className="app" style={{width: "80vw", height: "65vh"}}>
-                  <textarea id="diary-area" style={{width:"100%", height:"100%"}} defaultValue={diary}></textarea>
+                  <RichTextEditor id="diary-area" className="rich-text-area" style={{width:"100%", height:"100%"}} defaultValue={diary} />
               </div>
           </div>
         </div>

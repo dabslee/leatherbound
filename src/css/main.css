@@ -192,7 +192,7 @@ h2 {
     box-shadow: 0.05rem 0.05rem 0.2rem rgba(0,0,0,0.3);
 }
 
-textarea {
+textarea, .rich-text-area {
     background-color: rgba(0,0,0,0);
     border-style: none;
     font-family: var(--body-font);
@@ -204,11 +204,17 @@ textarea {
     overflow-y: auto; /* Scroll internally */
 }
 
-textarea:focus {
+textarea:focus, .rich-text-area:focus {
     outline: none;
 }
 
-#app-container textarea, #app-container p {
+.rich-text-area ul, .rich-text-area ol {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+}
+
+#app-container textarea, #app-container .rich-text-area, #app-container p {
     font-size: var(--body-font-size, 0.2rem);
 }
 #app-container figcaption {
