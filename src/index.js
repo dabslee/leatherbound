@@ -16,6 +16,9 @@ const defaultSettings = {
     headerFont: 'DearSunshine',
     bodyFontSize: 20,
     headerFontSize: 40,
+    todoName: 'To do',
+    scheduleName: 'Schedule',
+    notesName: 'Notes',
     weatherLocation: '', // Set via geolocation on first load
     quickLinks: [
         { title: 'Mail', url: 'https://www.gmail.com', icon: 'gmail' },

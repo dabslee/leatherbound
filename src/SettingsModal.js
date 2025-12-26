@@ -230,6 +230,37 @@ export default class SettingsModal extends Component {
                         {this.state.weatherStatus === 'invalid' && <span style={{fontSize: '0.8rem', color: 'red'}}>{this.state.weatherError}</span>}
                     </div>
                 </div>
+
+                <hr style={{margin: '20px 0', border: '0', borderTop: '1px solid var(--text-color)', opacity: 0.3}} />
+                <h3>Section Names</h3>
+
+                <div className="setting-row">
+                    <label>To Do Section</label>
+                    <input
+                        type="text"
+                        value={settings.todoName || ''}
+                        onChange={(e) => this.updateSetting('todoName', e.target.value)}
+                        placeholder="To do"
+                    />
+                </div>
+                <div className="setting-row">
+                    <label>Schedule Section</label>
+                    <input
+                        type="text"
+                        value={settings.scheduleName || ''}
+                        onChange={(e) => this.updateSetting('scheduleName', e.target.value)}
+                        placeholder="Schedule"
+                    />
+                </div>
+                <div className="setting-row">
+                    <label>Notes Section</label>
+                    <input
+                        type="text"
+                        value={settings.notesName || ''}
+                        onChange={(e) => this.updateSetting('notesName', e.target.value)}
+                        placeholder="Notes"
+                    />
+                </div>
             </div>
         );
     }
