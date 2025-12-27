@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { apiKey } from './App';
+import { login, register } from './api';
 
 const iconGroups = {
     "Default": ['gmail', 'google-drive', 'google-calendar', 'fox', 'spotify', 'github--v1', 'blackboard-app', 'canvas-student'],
@@ -18,7 +19,11 @@ export default class SettingsModal extends Component {
         this.state = {
             activeTab: 'general',
             weatherStatus: null, // null, 'validating', 'valid', 'invalid'
-            weatherError: ''
+            weatherError: '',
+            username: '',
+            password: '',
+            authMessage: '',
+            isLogin: true
         };
     }
 
@@ -123,6 +128,16 @@ export default class SettingsModal extends Component {
                     Object.entries(data).forEach(([key, value]) => {
                         localStorage.setItem(key, value);
                     });
+                    // Initialize timestamps if missing
+                    let timestamps = {};
+                    const names = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
+                    names.forEach(name => {
+                        if (localStorage.getItem(name)) {
+                            timestamps[name] = Date.now();
+                        }
+                    });
+                    localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+
                     alert('Data imported successfully. The page will now reload.');
                     window.location.reload();
                 } else {
@@ -134,6 +149,127 @@ export default class SettingsModal extends Component {
         };
         reader.readAsText(file);
     };
+
+    handleAuth = async (e) => {
+        e.preventDefault();
+        const { username, password, isLogin } = this.state;
+        try {
+            if (isLogin) {
+                const data = await login(username, password);
+                localStorage.setItem('user_id', data.user_id);
+                localStorage.setItem('username', username);
+                localStorage.setItem('auth_token', data.token);
+                this.props.setAuthToken(data.token);
+                this.setState({ authMessage: 'Logged in successfully' });
+                // this.props.onSave(this.props.settings); // Not sufficient to trigger sync
+            } else {
+                await register(username, password);
+                this.setState({ authMessage: 'Registered successfully. Please log in.', isLogin: true });
+            }
+        } catch (err) {
+            this.setState({ authMessage: err.message || 'Authentication failed' });
+        }
+    };
+
+    handleLogout = () => {
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('username');
+        localStorage.removeItem('auth_token');
+        this.props.setAuthToken(null);
+        this.setState({ authMessage: 'Logged out' });
+    };
+
+    renderAccount() {
+        const userId = localStorage.getItem('user_id');
+        const username = localStorage.getItem('username');
+
+        if (userId) {
+            return (
+                <div className="settings-tab-content">
+                    <p>Logged in as <b>{username}</b></p>
+                    <button
+                        onClick={this.handleLogout}
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px',
+                            marginTop: '10px'
+                        }}
+                    >
+                        Logout
+                    </button>
+                    <p style={{marginTop: '20px', fontSize: '0.8rem', color: 'gray'}}>
+                        Your data is syncing with the cloud.
+                    </p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="settings-tab-content">
+                <div style={{marginBottom: '20px'}}>
+                     <button
+                        className={`tab-btn ${this.state.isLogin ? 'active' : ''}`}
+                        onClick={() => this.setState({isLogin: true, authMessage: ''})}
+                        style={{width: '50%'}}
+                    >
+                        Login
+                    </button>
+                    <button
+                        className={`tab-btn ${!this.state.isLogin ? 'active' : ''}`}
+                        onClick={() => this.setState({isLogin: false, authMessage: ''})}
+                        style={{width: '50%'}}
+                    >
+                        Register
+                    </button>
+                </div>
+
+                <form onSubmit={this.handleAuth}>
+                    <div className="setting-row">
+                        <label>Username</label>
+                        <input
+                            type="text"
+                            value={this.state.username}
+                            onChange={(e) => this.setState({username: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div className="setting-row">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            value={this.state.password}
+                            onChange={(e) => this.setState({password: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px',
+                            marginTop: '10px',
+                            width: '100%'
+                        }}
+                    >
+                        {this.state.isLogin ? 'Login' : 'Register'}
+                    </button>
+                </form>
+                {this.state.authMessage && <p style={{marginTop: '10px', color: this.state.authMessage.includes('success') ? 'green' : 'red'}}>{this.state.authMessage}</p>}
+            </div>
+        );
+    }
 
     renderGeneral() {
         const { settings } = this.props;
@@ -438,12 +574,19 @@ export default class SettingsModal extends Component {
                         >
                             Data
                         </button>
+                        <button
+                            className={`tab-btn ${this.state.activeTab === 'account' ? 'active' : ''}`}
+                            onClick={() => this.setState({activeTab: 'account'})}
+                        >
+                            Account
+                        </button>
                     </div>
 
                     {this.state.activeTab === 'general' && this.renderGeneral()}
                     {this.state.activeTab === 'sections' && this.renderSections()}
                     {this.state.activeTab === 'links' && this.renderLinks()}
                     {this.state.activeTab === 'data' && this.renderData()}
+                    {this.state.activeTab === 'account' && this.renderAccount()}
                 </div>
             </div>
         );

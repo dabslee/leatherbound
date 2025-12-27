@@ -6,6 +6,7 @@ import './css/settings.css';
 import App from './App';
 import DateComponent from './DateComponent';
 import SettingsModal from './SettingsModal';
+import { sync } from './api';
 
 const weatherApiKey = process.env.REACT_APP_WEATHER_API_KEY;
 
@@ -58,6 +59,7 @@ document.documentElement.style.setProperty('--header-font-size', (initialSetting
 function Root({ initialSettings, hadSavedSettings }) {
     const [settings, setSettings] = useState(initialSettings);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [authToken, setAuthToken] = useState(localStorage.getItem('auth_token'));
 
     useEffect(() => {
         if ((hadSavedSettings && settings.weatherLocation) || !navigator.geolocation || !weatherApiKey) return;
@@ -115,7 +117,77 @@ function Root({ initialSettings, hadSavedSettings }) {
 
         // Save settings
         localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
+
+        // Update timestamp for settings
+        const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+        timestamps['leatherbound-settings'] = Date.now();
+        localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
     }, [settings]);
+
+    useEffect(() => {
+        if (!authToken) return;
+
+        const syncData = async () => {
+            if (!navigator.onLine) return;
+
+            // Prepare data to sync
+            const keys = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
+            const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+            const dataToSync = {};
+            let lastSync = parseInt(localStorage.getItem('last_sync') || '0');
+
+            keys.forEach(key => {
+                // If modified since last sync, send content
+                if ((timestamps[key] || 0) > lastSync) {
+                    dataToSync[key] = {
+                        timestamp: timestamps[key] || 0,
+                        content: localStorage.getItem(key)
+                    };
+                } else {
+                     // Otherwise just send timestamp check
+                     dataToSync[key] = {
+                        timestamp: timestamps[key] || 0
+                    };
+                }
+            });
+
+            try {
+                const result = await sync(authToken, dataToSync);
+                const updates = result.updates;
+
+                // Apply updates
+                Object.keys(updates).forEach(key => {
+                    const update = updates[key];
+                    localStorage.setItem(key, update.content);
+                    timestamps[key] = update.timestamp;
+
+                    // Update DOM for text areas if they exist
+                    const area = document.getElementById(key + "-area");
+                    if (area) {
+                        area.innerHTML = update.content;
+                    }
+
+                    // Update settings state if settings changed
+                    if (key === 'leatherbound-settings') {
+                        setSettings(JSON.parse(update.content));
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                     localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+                }
+
+                localStorage.setItem('last_sync', Date.now().toString());
+            } catch (e) {
+                console.error("Sync failed", e);
+            }
+        };
+
+        const interval = setInterval(syncData, 10000); // Sync every 10 seconds
+        syncData(); // Initial sync
+
+        return () => clearInterval(interval);
+    }, [authToken]);
 
     const handleSaveSettings = (newSettings) => {
         setSettings(newSettings);
@@ -156,6 +228,7 @@ function Root({ initialSettings, hadSavedSettings }) {
                 onClose={() => setIsSettingsOpen(false)}
                 settings={settings}
                 onSave={handleSaveSettings}
+                setAuthToken={setAuthToken}
             />
         </React.StrictMode>
     );
@@ -175,8 +248,24 @@ ReactDOM.render(
 /* Load and save areas */
 function saveAreas(){
   var names = ["schedule", "todo", "notes", "diary"];
+  var timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+  var changed = false;
+
   for (var i = 0; i < names.length; i++){
       var area = document.getElementById(names[i] + "-area");
-      if (area) localStorage.setItem(names[i], area.innerHTML);
+      if (area) {
+          const currentContent = area.innerHTML;
+          const savedContent = localStorage.getItem(names[i]);
+
+          if (currentContent !== savedContent) {
+              localStorage.setItem(names[i], currentContent);
+              timestamps[names[i]] = Date.now();
+              changed = true;
+          }
+      }
+  }
+
+  if (changed) {
+      localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
   }
 }
