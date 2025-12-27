@@ -134,20 +134,27 @@ function Root({ initialSettings, hadSavedSettings }) {
             const keys = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
             const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
             const dataToSync = {};
-            let lastSync = parseInt(localStorage.getItem('last_sync') || '0');
+            const lastSyncRaw = localStorage.getItem('last_sync');
+            const lastSync = parseInt(lastSyncRaw || '0');
+            const initialSync = !lastSyncRaw;
 
             keys.forEach(key => {
+                // On first login, don't push local data; ask server for its latest copy
+                if (initialSync) {
+                    dataToSync[key] = { timestamp: 0 };
+                    return;
+                }
+
+                const keyTimestamp = timestamps[key] || 0;
                 // If modified since last sync, send content
-                if ((timestamps[key] || 0) > lastSync) {
+                if (keyTimestamp > lastSync) {
                     dataToSync[key] = {
-                        timestamp: timestamps[key] || 0,
+                        timestamp: keyTimestamp,
                         content: localStorage.getItem(key)
                     };
                 } else {
                      // Otherwise just send timestamp check
-                     dataToSync[key] = {
-                        timestamp: timestamps[key] || 0
-                    };
+                     dataToSync[key] = { timestamp: keyTimestamp };
                 }
             });
 
