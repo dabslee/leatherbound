@@ -1,7 +1,13 @@
-// api.js
+const API_BASE = process.env.REACT_APP_FLASK_URI.replace(/\/$/, '');
+
+function apiFetch(path, options) {
+    const base = API_BASE ? `${API_BASE}` : '';
+    const url = `${base}${path}`;
+    return fetch(url, options);
+}
 
 export async function login(username, password) {
-    const response = await fetch('/api/login', {
+    const response = await apiFetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -13,7 +19,7 @@ export async function login(username, password) {
 }
 
 export async function register(username, password) {
-    const response = await fetch('/api/register', {
+    const response = await apiFetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -25,7 +31,7 @@ export async function register(username, password) {
 }
 
 export async function sync(token, data) {
-    const response = await fetch('/api/sync', {
+    const response = await apiFetch('/api/sync', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

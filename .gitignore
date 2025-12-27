@@ -4,6 +4,8 @@
 .pnp.js
 venv/
 backend/venv/
+__pycache__/
+instance/
 
 # Testing
 /coverage
@@ -17,6 +19,7 @@ backend/venv/
 .env.development.local
 .env.test.local
 .env.production.local
+.env
 
 npm-debug.log*
 yarn-debug.log*

@@ -192,6 +192,16 @@ export default class SettingsModal extends Component {
         this.setState({ authMessage: 'Logged out' });
     };
 
+    getLastSyncText = () => {
+        const lastSyncRaw = localStorage.getItem('last_sync');
+        const lastSync = lastSyncRaw ? parseInt(lastSyncRaw, 10) : 0;
+        if (!lastSync) {
+            return 'Last synced: not yet';
+        }
+        const formatted = new Date(lastSync).toLocaleString();
+        return `Last synced: ${formatted}`;
+    };
+
     renderData() {
         const userId = localStorage.getItem('user_id');
         const username = localStorage.getItem('username');
@@ -207,6 +217,9 @@ export default class SettingsModal extends Component {
                 {userId ? (
                     <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
                         <p>Logged in as <b>{username}</b></p>
+                        <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
+                            Your data is syncing with the cloud.<br/>{this.getLastSyncText()}
+                        </p>
                         <button
                             onClick={this.handleLogout}
                             style={{
@@ -223,9 +236,6 @@ export default class SettingsModal extends Component {
                         >
                             Logout
                         </button>
-                        <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
-                            Your data is syncing with the cloud.
-                        </p>
                     </div>
                 ) : (
                     <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
@@ -251,16 +261,6 @@ export default class SettingsModal extends Component {
                                     value={this.state.password}
                                     onChange={(e) => this.setState({password: e.target.value})}
                                     disabled={!isOnline}
-                                    style={{
-                                        padding: '0.1rem',
-                                        border: '0.01rem solid #ccc',
-                                        borderRadius: '0.06rem',
-                                        fontSize: '0.2rem',
-                                        backgroundColor: isOnline ? 'rgba(255, 255, 255, 0.8)' : '#f0f0f0',
-                                        color: 'black',
-                                        fontFamily: 'var(--body-font)',
-                                        width: '100%'
-                                    }}
                                 />
                             </div>
                             <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>

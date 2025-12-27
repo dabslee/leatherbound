@@ -107,6 +107,7 @@
 }
 
 .setting-row input[type="text"],
+.setting-row input[type="password"],
 .setting-row select {
     padding: 0.1rem;
     border: 0.01rem solid #ccc;
@@ -118,6 +119,7 @@
 }
 
 [data-theme="dark"] .setting-row input[type="text"],
+[data-theme="dark"] .setting-row input[type="password"],
 [data-theme="dark"] .setting-row select, [data-theme="dark"] .setting-row select option {
     background-color: rgba(0, 0, 0, 0.8);
     color: var(--text-color);
