@@ -256,8 +256,9 @@ function saveAreas(){
       if (area) {
           const currentContent = area.innerHTML;
           const savedContent = localStorage.getItem(names[i]);
+          const normalizedSaved = savedContent === null ? '' : savedContent;
 
-          if (currentContent !== savedContent) {
+          if (currentContent !== normalizedSaved) {
               localStorage.setItem(names[i], currentContent);
               timestamps[names[i]] = Date.now();
               changed = true;
