@@ -23,17 +23,25 @@ export default class SettingsModal extends Component {
             username: '',
             password: '',
             authMessage: '',
-            isLogin: true
+            isOnline: navigator.onLine
         };
     }
 
     componentDidMount() {
         document.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('online', this.handleOnlineStatus);
+        window.addEventListener('offline', this.handleOnlineStatus);
     }
 
     componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('online', this.handleOnlineStatus);
+        window.removeEventListener('offline', this.handleOnlineStatus);
     }
+
+    handleOnlineStatus = () => {
+        this.setState({ isOnline: navigator.onLine });
+    };
 
     handleKeyDown = (event) => {
         if (event.key === 'Escape') {
@@ -150,21 +158,26 @@ export default class SettingsModal extends Component {
         reader.readAsText(file);
     };
 
-    handleAuth = async (e) => {
+    handleAuth = async (e, type) => {
         e.preventDefault();
-        const { username, password, isLogin } = this.state;
+        const { username, password } = this.state;
+
+        if (!this.state.isOnline) {
+             this.setState({ authMessage: 'You must be online to login or register.' });
+             return;
+        }
+
         try {
-            if (isLogin) {
+            if (type === 'login') {
                 const data = await login(username, password);
                 localStorage.setItem('user_id', data.user_id);
                 localStorage.setItem('username', username);
                 localStorage.setItem('auth_token', data.token);
                 this.props.setAuthToken(data.token);
                 this.setState({ authMessage: 'Logged in successfully' });
-                // this.props.onSave(this.props.settings); // Not sufficient to trigger sync
             } else {
                 await register(username, password);
-                this.setState({ authMessage: 'Registered successfully. Please log in.', isLogin: true });
+                this.setState({ authMessage: 'Registered successfully. Please log in.' });
             }
         } catch (err) {
             this.setState({ authMessage: err.message || 'Authentication failed' });
@@ -179,77 +192,141 @@ export default class SettingsModal extends Component {
         this.setState({ authMessage: 'Logged out' });
     };
 
-    renderAccount() {
+    renderData() {
         const userId = localStorage.getItem('user_id');
         const username = localStorage.getItem('username');
-
-        if (userId) {
-            return (
-                <div className="settings-tab-content">
-                    <p>Logged in as <b>{username}</b></p>
-                    <button
-                        onClick={this.handleLogout}
-                        style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
-                            borderRadius: '4px',
-                            fontFamily: 'var(--body-font)',
-                            fontSize: '16px',
-                            marginTop: '10px'
-                        }}
-                    >
-                        Logout
-                    </button>
-                    <p style={{marginTop: '20px', fontSize: '0.8rem', color: 'gray'}}>
-                        Your data is syncing with the cloud.
-                    </p>
-                </div>
-            );
-        }
+        const { isOnline } = this.state;
 
         return (
             <div className="settings-tab-content">
-                <div style={{marginBottom: '20px'}}>
-                     <button
-                        className={`tab-btn ${this.state.isLogin ? 'active' : ''}`}
-                        onClick={() => this.setState({isLogin: true, authMessage: ''})}
-                        style={{width: '50%'}}
-                    >
-                        Login
-                    </button>
-                    <button
-                        className={`tab-btn ${!this.state.isLogin ? 'active' : ''}`}
-                        onClick={() => this.setState({isLogin: false, authMessage: ''})}
-                        style={{width: '50%'}}
-                    >
-                        Register
-                    </button>
-                </div>
+                <h3 style={{marginTop: 0, fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>Account & Sync</h3>
+                <p style={{fontSize: '0.18rem', marginBottom: '0.15rem'}}>
+                    Log in to synchronize your notes, schedule, and settings across devices.
+                </p>
 
-                <form onSubmit={this.handleAuth}>
-                    <div className="setting-row">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            value={this.state.username}
-                            onChange={(e) => this.setState({username: e.target.value})}
-                            required
-                        />
+                {userId ? (
+                    <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
+                        <p>Logged in as <b>{username}</b></p>
+                        <button
+                            onClick={this.handleLogout}
+                            style={{
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                background: 'var(--paper-color)',
+                                border: '1px solid var(--text-color)',
+                                color: 'var(--text-color)',
+                                borderRadius: '4px',
+                                fontFamily: 'var(--body-font)',
+                                fontSize: '16px',
+                                marginTop: '10px'
+                            }}
+                        >
+                            Logout
+                        </button>
+                        <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
+                            Your data is syncing with the cloud.
+                        </p>
                     </div>
-                    <div className="setting-row">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            value={this.state.password}
-                            onChange={(e) => this.setState({password: e.target.value})}
-                            required
-                        />
+                ) : (
+                    <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
+                         {!isOnline && (
+                             <p style={{color: 'red', marginBottom: '10px', fontSize: '0.16rem'}}>
+                                 You must be online to log in or register.
+                             </p>
+                         )}
+                        <form onSubmit={(e) => e.preventDefault()}>
+                            <div className="setting-row">
+                                <label>Username</label>
+                                <input
+                                    type="text"
+                                    value={this.state.username}
+                                    onChange={(e) => this.setState({username: e.target.value})}
+                                    disabled={!isOnline}
+                                />
+                            </div>
+                            <div className="setting-row">
+                                <label>Password</label>
+                                <input
+                                    type="password"
+                                    value={this.state.password}
+                                    onChange={(e) => this.setState({password: e.target.value})}
+                                    disabled={!isOnline}
+                                    style={{
+                                        padding: '0.1rem',
+                                        border: '0.01rem solid #ccc',
+                                        borderRadius: '0.06rem',
+                                        fontSize: '0.2rem',
+                                        backgroundColor: isOnline ? 'rgba(255, 255, 255, 0.8)' : '#f0f0f0',
+                                        color: 'black',
+                                        fontFamily: 'var(--body-font)',
+                                        width: '100%'
+                                    }}
+                                />
+                            </div>
+                            <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                                <button
+                                    onClick={(e) => this.handleAuth(e, 'login')}
+                                    disabled={!isOnline}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 12px',
+                                        cursor: isOnline ? 'pointer' : 'not-allowed',
+                                        background: 'var(--paper-color)',
+                                        border: '1px solid var(--text-color)',
+                                        color: 'var(--text-color)',
+                                        borderRadius: '4px',
+                                        fontFamily: 'var(--body-font)',
+                                        fontSize: '16px',
+                                        opacity: isOnline ? 1 : 0.6
+                                    }}
+                                >
+                                    Login
+                                </button>
+                                <button
+                                    onClick={(e) => this.handleAuth(e, 'register')}
+                                    disabled={!isOnline}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 12px',
+                                        cursor: isOnline ? 'pointer' : 'not-allowed',
+                                        background: 'var(--paper-color)',
+                                        border: '1px solid var(--text-color)',
+                                        color: 'var(--text-color)',
+                                        borderRadius: '4px',
+                                        fontFamily: 'var(--body-font)',
+                                        fontSize: '16px',
+                                        opacity: isOnline ? 1 : 0.6
+                                    }}
+                                >
+                                    Register
+                                </button>
+                            </div>
+                        </form>
+                        {this.state.authMessage && <p style={{marginTop: '10px', color: this.state.authMessage.includes('success') ? 'green' : 'red'}}>{this.state.authMessage}</p>}
                     </div>
+                )}
+
+                <h3 style={{marginTop: '0.2rem', fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>Backup & Restore</h3>
+                <p style={{fontSize: '0.18rem', marginBottom: '0.15rem'}}>
+                     Manually export or import your data as a file.
+                </p>
+                <div style={{display: 'flex', gap: '10px'}}>
                     <button
-                        type="submit"
+                        onClick={this.exportData}
+                        style={{
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: 'var(--paper-color)',
+                            border: '1px solid var(--text-color)',
+                            color: 'var(--text-color)',
+                            borderRadius: '4px',
+                            fontFamily: 'var(--body-font)',
+                            fontSize: '16px'
+                        }}
+                    >
+                        Export Data
+                    </button>
+                    <label
                         style={{
                             padding: '8px 12px',
                             cursor: 'pointer',
@@ -259,14 +336,13 @@ export default class SettingsModal extends Component {
                             borderRadius: '4px',
                             fontFamily: 'var(--body-font)',
                             fontSize: '16px',
-                            marginTop: '10px',
-                            width: '100%'
+                            display: 'inline-block'
                         }}
                     >
-                        {this.state.isLogin ? 'Login' : 'Register'}
-                    </button>
-                </form>
-                {this.state.authMessage && <p style={{marginTop: '10px', color: this.state.authMessage.includes('success') ? 'green' : 'red'}}>{this.state.authMessage}</p>}
+                        Import Data
+                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importData} />
+                    </label>
+                </div>
             </div>
         );
     }
@@ -495,47 +571,6 @@ export default class SettingsModal extends Component {
         );
     }
 
-    renderData() {
-        return (
-            <div className="settings-tab-content">
-                <p>Export or Import your entire Leatherbound configuration (Settings, Quick Links, Notes, etc).</p>
-                <div style={{marginTop: '20px', display: 'flex', gap: '10px'}}>
-                    <button
-                        onClick={this.exportData}
-                        style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
-                            borderRadius: '4px',
-                            fontFamily: 'var(--body-font)',
-                            fontSize: '16px'
-                        }}
-                    >
-                        Export Data
-                    </button>
-                    <label
-                        style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'var(--paper-color)',
-                            border: '1px solid var(--text-color)',
-                            color: 'var(--text-color)',
-                            borderRadius: '4px',
-                            fontFamily: 'var(--body-font)',
-                            fontSize: '16px',
-                            display: 'inline-block'
-                        }}
-                    >
-                        Import Data
-                        <input type="file" style={{display: 'none'}} accept=".json,.txt" onChange={this.importData} />
-                    </label>
-                </div>
-            </div>
-        );
-    }
-
     render() {
         if (!this.props.isOpen) return null;
 
@@ -574,19 +609,12 @@ export default class SettingsModal extends Component {
                         >
                             Data
                         </button>
-                        <button
-                            className={`tab-btn ${this.state.activeTab === 'account' ? 'active' : ''}`}
-                            onClick={() => this.setState({activeTab: 'account'})}
-                        >
-                            Account
-                        </button>
                     </div>
 
                     {this.state.activeTab === 'general' && this.renderGeneral()}
                     {this.state.activeTab === 'sections' && this.renderSections()}
                     {this.state.activeTab === 'links' && this.renderLinks()}
                     {this.state.activeTab === 'data' && this.renderData()}
-                    {this.state.activeTab === 'account' && this.renderAccount()}
                 </div>
             </div>
         );
