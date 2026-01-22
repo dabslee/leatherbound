@@ -249,6 +249,7 @@ ReactDOM.render(
     window.onunload = function() {saveAreas();}
     window.onkeypress = function() {saveAreas();}
     window.onkeydown = function() {saveAreas(); console.log("saved");}
+    window.onpaste = function() {saveAreas();}
   }
 );
 

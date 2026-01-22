@@ -9,6 +9,12 @@ const RichTextEditor = ({ id, defaultValue, className, style }) => {
         }
     }, []); // Only on mount
 
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+    };
+
     const handleKeyDown = (e) => {
         if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
              switch(e.key.toLowerCase()) {
@@ -54,6 +60,7 @@ const RichTextEditor = ({ id, defaultValue, className, style }) => {
             style={{ ...style, overflowY: 'auto', whiteSpace: 'pre-wrap', outline: 'none' }}
             contentEditable
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
         />
     );
 };

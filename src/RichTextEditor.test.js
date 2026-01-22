@@ -64,4 +64,18 @@ describe('RichTextEditor', () => {
         fireEvent.keyDown(editor, { key: '*', code: 'Digit8', ctrlKey: true, shiftKey: true });
         expect(execCommandSpy).toHaveBeenCalledWith('insertUnorderedList');
     });
+
+    test('handles paste by inserting plain text', () => {
+        const { container } = render(<RichTextEditor id="test-editor" />);
+        const editor = container.querySelector('#test-editor');
+
+        const pasteData = {
+            getData: jest.fn().mockReturnValue('Pasted Plain Text'),
+        };
+
+        fireEvent.paste(editor, { clipboardData: pasteData });
+
+        expect(pasteData.getData).toHaveBeenCalledWith('text/plain');
+        expect(execCommandSpy).toHaveBeenCalledWith('insertText', false, 'Pasted Plain Text');
+    });
 });
