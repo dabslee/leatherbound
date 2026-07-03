@@ -1,0 +1,8 @@
+node_modules
+build
+backend
+.git
+.env
+*.log
+*.crx
+*.pem

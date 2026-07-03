@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    container_name: leatherbound-backend
+    restart: unless-stopped
+    user: "1000:1000"                       # match host owner of instance/ (blee) for SQLite writes
+    environment:
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}  # from ./.env; must stay stable or JWTs invalidate
+    volumes:
+      - ./backend/instance:/app/instance     # persist the SQLite DB (real user accounts)
+    ports:
+      - "127.0.0.1:3001:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      args:                                  # REACT_APP_* are baked in at build time (from ./.env)
+        REACT_APP_FLASK_URI: ${REACT_APP_FLASK_URI}
+        REACT_APP_WEATHER_API_KEY: ${REACT_APP_WEATHER_API_KEY}
+        INLINE_RUNTIME_CHUNK: ${INLINE_RUNTIME_CHUNK}
+    container_name: leatherbound-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
