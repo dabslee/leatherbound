@@ -6,9 +6,12 @@ import './css/settings.css';
 import App from './App';
 import DateComponent from './DateComponent';
 import SettingsModal from './SettingsModal';
-import { sync } from './api';
+import { sync, pullAll, pushAll } from './api';
 
 const weatherApiKey = process.env.REACT_APP_WEATHER_API_KEY;
+
+// Keys that are synchronized with the cloud.
+const SYNC_KEYS = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
 
 /* Default Settings */
 const defaultSettings = {
@@ -124,21 +127,61 @@ function Root({ initialSettings, hadSavedSettings }) {
         localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
     }, [settings]);
 
+    // Apply a map of key -> {content, timestamp} to localStorage, the DOM, and React state.
+    const applyServerData = (dataMap) => {
+        if (!dataMap || Object.keys(dataMap).length === 0) return;
+
+        const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+
+        Object.keys(dataMap).forEach(key => {
+            const entry = dataMap[key];
+            if (!entry || entry.content == null) return;
+
+            localStorage.setItem(key, entry.content);
+            timestamps[key] = entry.timestamp;
+
+            // Update DOM for text areas if they exist
+            const area = document.getElementById(key + "-area");
+            if (area) {
+                area.innerHTML = entry.content;
+            }
+
+            // Update settings state if settings changed
+            if (key === 'leatherbound-settings') {
+                try {
+                    setSettings(JSON.parse(entry.content));
+                } catch (e) {
+                    console.error("Failed to parse synced settings", e);
+                }
+            }
+        });
+
+        localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+    };
+
     useEffect(() => {
         if (!authToken) return;
 
         const syncData = async () => {
             if (!navigator.onLine) return;
 
-            // Prepare data to sync
-            const keys = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
+            // Flush any pending edits from the text areas into localStorage first, so
+            // this pass sees the latest content (keydown/paste listeners can lag a keystroke).
+            saveAreas();
+
+            // Capture the snapshot time BEFORE reading data. last_sync is set to this value
+            // on success so that any edit made during the in-flight request keeps a timestamp
+            // greater than last_sync and is still picked up on the next pass. (Stamping
+            // last_sync after the request completes would strand those edits below it.)
+            const syncStart = Date.now();
+
             const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
             const dataToSync = {};
             const lastSyncRaw = localStorage.getItem('last_sync');
             const lastSync = parseInt(lastSyncRaw || '0');
             const initialSync = !lastSyncRaw;
 
-            keys.forEach(key => {
+            SYNC_KEYS.forEach(key => {
                 // On first login, don't push local data; ask server for its latest copy
                 if (initialSync) {
                     dataToSync[key] = { timestamp: 0 };
@@ -160,31 +203,8 @@ function Root({ initialSettings, hadSavedSettings }) {
 
             try {
                 const result = await sync(authToken, dataToSync);
-                const updates = result.updates;
-
-                // Apply updates
-                Object.keys(updates).forEach(key => {
-                    const update = updates[key];
-                    localStorage.setItem(key, update.content);
-                    timestamps[key] = update.timestamp;
-
-                    // Update DOM for text areas if they exist
-                    const area = document.getElementById(key + "-area");
-                    if (area) {
-                        area.innerHTML = update.content;
-                    }
-
-                    // Update settings state if settings changed
-                    if (key === 'leatherbound-settings') {
-                        setSettings(JSON.parse(update.content));
-                    }
-                });
-
-                if (Object.keys(updates).length > 0) {
-                     localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
-                }
-
-                localStorage.setItem('last_sync', Date.now().toString());
+                applyServerData(result.updates);
+                localStorage.setItem('last_sync', syncStart.toString());
             } catch (e) {
                 console.error("Sync failed", e);
             }
@@ -195,6 +215,43 @@ function Root({ initialSettings, hadSavedSettings }) {
 
         return () => clearInterval(interval);
     }, [authToken]);
+
+    // Force push: replace the cloud copy with the local copy.
+    const forcePush = async () => {
+        if (!authToken) throw new Error('You must be logged in to sync.');
+        if (!navigator.onLine) throw new Error('You must be online to sync.');
+
+        // Flush pending edits so we push exactly what is on screen.
+        saveAreas();
+
+        const now = Date.now();
+        const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+        const dataToPush = {};
+
+        SYNC_KEYS.forEach(key => {
+            const content = localStorage.getItem(key);
+            if (content !== null) {
+                dataToPush[key] = { timestamp: now, content };
+                timestamps[key] = now;
+            }
+        });
+
+        await pushAll(authToken, dataToPush);
+
+        // Keep local timestamps and last_sync aligned so the background sync stays a no-op.
+        localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+        localStorage.setItem('last_sync', now.toString());
+    };
+
+    // Force pull: replace the local copy with the cloud copy.
+    const forcePull = async () => {
+        if (!authToken) throw new Error('You must be logged in to sync.');
+        if (!navigator.onLine) throw new Error('You must be online to sync.');
+
+        const result = await pullAll(authToken);
+        applyServerData(result.data);
+        localStorage.setItem('last_sync', Date.now().toString());
+    };
 
     const handleSaveSettings = (newSettings) => {
         setSettings(newSettings);
@@ -236,6 +293,8 @@ function Root({ initialSettings, hadSavedSettings }) {
                 settings={settings}
                 onSave={handleSaveSettings}
                 setAuthToken={setAuthToken}
+                forcePush={forcePush}
+                forcePull={forcePull}
             />
         </React.StrictMode>
     );

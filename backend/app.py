@@ -39,6 +39,22 @@ def verify_token(token):
     except jwt.InvalidTokenError:
         return None
 
+def authenticate_request():
+    """Return (user_id, None) on success or (None, (response, status)) on failure."""
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None, (jsonify({'error': 'Missing or invalid Authorization header'}), 401)
+
+    token = auth_header.split(' ')[1]
+    user_id = verify_token(token)
+    if not user_id:
+        return None, (jsonify({'error': 'Invalid or expired token'}), 401)
+
+    if not User.query.get(user_id):
+        return None, (jsonify({'error': 'User not found'}), 404)
+
+    return user_id, None
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
@@ -72,22 +88,12 @@ def login():
 
 @app.route('/api/sync', methods=['POST'])
 def sync():
-    auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return jsonify({'error': 'Missing or invalid Authorization header'}), 401
-
-    token = auth_header.split(' ')[1]
-    user_id = verify_token(token)
-
-    if not user_id:
-        return jsonify({'error': 'Invalid or expired token'}), 401
+    user_id, error = authenticate_request()
+    if error:
+        return error
 
     data = request.json
     client_data = data.get('data') # Map of key -> {timestamp, content (optional)}
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
 
     updates = {}
 
@@ -129,6 +135,53 @@ def sync():
     db.session.commit()
 
     return jsonify({'updates': updates}), 200
+
+@app.route('/api/pull', methods=['POST'])
+def pull():
+    """Force pull: return the full server-side copy so the client can replace local."""
+    user_id, error = authenticate_request()
+    if error:
+        return error
+
+    entries = UserData.query.filter_by(user_id=user_id).all()
+    data = {
+        entry.key: {'content': entry.content, 'timestamp': entry.timestamp}
+        for entry in entries
+    }
+
+    return jsonify({'data': data}), 200
+
+@app.route('/api/push', methods=['POST'])
+def push():
+    """Force push: replace the entire server-side copy with the client's data."""
+    user_id, error = authenticate_request()
+    if error:
+        return error
+
+    payload = request.json or {}
+    client_data = payload.get('data', {}) # Map of key -> {timestamp, content}
+
+    # Overwrite every key the client sent, unconditionally.
+    for key, info in client_data.items():
+        content = info.get('content')
+        timestamp = info.get('timestamp', 0)
+
+        server_entry = UserData.query.filter_by(user_id=user_id, key=key).first()
+        if server_entry:
+            server_entry.content = content
+            server_entry.timestamp = timestamp
+            db.session.add(server_entry)
+        else:
+            db.session.add(UserData(user_id=user_id, key=key, content=content, timestamp=timestamp))
+
+    # Drop any server keys the client did not send, so the cloud mirrors local exactly.
+    for entry in UserData.query.filter_by(user_id=user_id).all():
+        if entry.key not in client_data:
+            db.session.delete(entry)
+
+    db.session.commit()
+
+    return jsonify({'message': 'Push successful'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

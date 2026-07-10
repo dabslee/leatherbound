@@ -23,7 +23,9 @@ export default class SettingsModal extends Component {
             username: '',
             password: '',
             authMessage: '',
-            isOnline: navigator.onLine
+            isOnline: navigator.onLine,
+            syncMessage: '',
+            syncBusy: false
         };
     }
 
@@ -192,6 +194,40 @@ export default class SettingsModal extends Component {
         this.setState({ authMessage: 'Logged out' });
     };
 
+    handleForcePush = async () => {
+        if (this.state.syncBusy) return;
+        const confirmed = window.confirm(
+            "Force push will REPLACE the cloud copy with your local data. " +
+            "Any changes made on other devices that haven't synced here yet will be lost. Continue?"
+        );
+        if (!confirmed) return;
+
+        this.setState({ syncBusy: true, syncMessage: 'Pushing to cloud...' });
+        try {
+            await this.props.forcePush();
+            this.setState({ syncBusy: false, syncMessage: 'Success: cloud now matches this device.' });
+        } catch (e) {
+            this.setState({ syncBusy: false, syncMessage: e.message || 'Force push failed.' });
+        }
+    };
+
+    handleForcePull = async () => {
+        if (this.state.syncBusy) return;
+        const confirmed = window.confirm(
+            "Force pull will REPLACE your local data with the cloud copy. " +
+            "Any local changes that haven't synced to the cloud yet will be lost. Continue?"
+        );
+        if (!confirmed) return;
+
+        this.setState({ syncBusy: true, syncMessage: 'Pulling from cloud...' });
+        try {
+            await this.props.forcePull();
+            this.setState({ syncBusy: false, syncMessage: 'Success: this device now matches the cloud.' });
+        } catch (e) {
+            this.setState({ syncBusy: false, syncMessage: e.message || 'Force pull failed.' });
+        }
+    };
+
     getLastSyncText = () => {
         const lastSyncRaw = localStorage.getItem('last_sync');
         const lastSync = lastSyncRaw ? parseInt(lastSyncRaw, 10) : 0;
@@ -220,6 +256,63 @@ export default class SettingsModal extends Component {
                         <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
                             Your data is syncing with the cloud.<br/>{this.getLastSyncText()}
                         </p>
+                        <div style={{marginTop: '12px', borderTop: '1px solid rgba(128,128,128,0.2)', paddingTop: '12px'}}>
+                            <p style={{fontSize: '0.16rem', marginBottom: '8px'}}>
+                                Manual sync — use these if automatic sync got out of step:
+                            </p>
+                            <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                                <button
+                                    onClick={this.handleForcePull}
+                                    disabled={!isOnline || this.state.syncBusy}
+                                    title="Replace this device's data with the cloud copy"
+                                    style={{
+                                        flex: 1,
+                                        minWidth: '160px',
+                                        padding: '8px 12px',
+                                        cursor: (isOnline && !this.state.syncBusy) ? 'pointer' : 'not-allowed',
+                                        background: 'var(--paper-color)',
+                                        border: '1px solid var(--text-color)',
+                                        color: 'var(--text-color)',
+                                        borderRadius: '4px',
+                                        fontFamily: 'var(--body-font)',
+                                        fontSize: '16px',
+                                        opacity: (isOnline && !this.state.syncBusy) ? 1 : 0.6
+                                    }}
+                                >
+                                    ⬇ Force Pull (Cloud → Local)
+                                </button>
+                                <button
+                                    onClick={this.handleForcePush}
+                                    disabled={!isOnline || this.state.syncBusy}
+                                    title="Replace the cloud copy with this device's data"
+                                    style={{
+                                        flex: 1,
+                                        minWidth: '160px',
+                                        padding: '8px 12px',
+                                        cursor: (isOnline && !this.state.syncBusy) ? 'pointer' : 'not-allowed',
+                                        background: 'var(--paper-color)',
+                                        border: '1px solid var(--text-color)',
+                                        color: 'var(--text-color)',
+                                        borderRadius: '4px',
+                                        fontFamily: 'var(--body-font)',
+                                        fontSize: '16px',
+                                        opacity: (isOnline && !this.state.syncBusy) ? 1 : 0.6
+                                    }}
+                                >
+                                    ⬆ Force Push (Local → Cloud)
+                                </button>
+                            </div>
+                            {this.state.syncMessage && (
+                                <p style={{
+                                    marginTop: '10px',
+                                    fontSize: '0.16rem',
+                                    color: this.state.syncMessage.startsWith('Success') ? 'green'
+                                        : this.state.syncMessage.endsWith('...') ? 'gray' : 'red'
+                                }}>
+                                    {this.state.syncMessage}
+                                </p>
+                            )}
+                        </div>
                         <button
                             onClick={this.handleLogout}
                             style={{

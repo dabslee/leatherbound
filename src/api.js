@@ -44,3 +44,34 @@ export async function sync(token, data) {
     }
     return response.json();
 }
+
+// Force pull: fetch the full server-side copy so the caller can replace local data.
+export async function pullAll(token) {
+    const response = await apiFetch('/api/pull', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        throw new Error('Force pull failed');
+    }
+    return response.json();
+}
+
+// Force push: replace the entire server-side copy with the provided local data.
+export async function pushAll(token, data) {
+    const response = await apiFetch('/api/push', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ data })
+    });
+    if (!response.ok) {
+        throw new Error('Force push failed');
+    }
+    return response.json();
+}
