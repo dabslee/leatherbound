@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import './css/main.css';
 import './css/themeswitcher.css';
@@ -64,6 +64,14 @@ function Root({ initialSettings, hadSavedSettings }) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [authToken, setAuthToken] = useState(localStorage.getItem('auth_token'));
 
+    // Serialized settings we consider already synced/loaded. Prevents a plain page
+    // (re)load from bumping the settings timestamp and making a stale copy look newer
+    // than the cloud. Updated whenever we persist a genuine change or apply a pulled one.
+    const settingsRef = useRef(JSON.stringify(initialSettings));
+    // Set while a Force Pull/Push is in flight so the 10s background pass stands down
+    // and can't race (and clobber) the forced operation.
+    const forceOpRef = useRef(false);
+
     useEffect(() => {
         if ((hadSavedSettings && settings.weatherLocation) || !navigator.geolocation || !weatherApiKey) return;
         let cancelled = false;
@@ -118,16 +126,23 @@ function Root({ initialSettings, hadSavedSettings }) {
         document.documentElement.style.setProperty('--body-font-size', (settings.bodyFontSize || 20) / 100 + 'rem');
         document.documentElement.style.setProperty('--header-font-size', (settings.headerFontSize || 40) / 100 + 'rem');
 
-        // Save settings
-        localStorage.setItem('leatherbound-settings', JSON.stringify(settings));
+        // Persist settings. Always write the content, but only bump the sync timestamp when
+        // the settings actually changed. This effect also runs on every mount and on pulled
+        // updates; bumping unconditionally made a freshly loaded (possibly stale) device stamp
+        // its settings with "now" and overwrite a newer cloud copy on the next sync.
+        const serialized = JSON.stringify(settings);
+        localStorage.setItem('leatherbound-settings', serialized);
 
-        // Update timestamp for settings
-        const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
-        timestamps['leatherbound-settings'] = Date.now();
-        localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+        if (serialized !== settingsRef.current) {
+            const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+            timestamps['leatherbound-settings'] = Date.now();
+            localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+            settingsRef.current = serialized;
+        }
     }, [settings]);
 
     // Apply a map of key -> {content, timestamp} to localStorage, the DOM, and React state.
+    // Used by the background sync pass for server-newer updates.
     const applyServerData = (dataMap) => {
         if (!dataMap || Object.keys(dataMap).length === 0) return;
 
@@ -137,11 +152,15 @@ function Root({ initialSettings, hadSavedSettings }) {
             const entry = dataMap[key];
             if (!entry || entry.content == null) return;
 
+            // Never overwrite an editor the user is actively typing in; that yanks their caret
+            // and drops in-progress text. Skip it this pass and let it reconcile once focus
+            // leaves (their own edit carries a newer timestamp anyway).
+            const area = document.getElementById(key + "-area");
+            if (area && document.activeElement === area) return;
+
             localStorage.setItem(key, entry.content);
             timestamps[key] = entry.timestamp;
 
-            // Update DOM for text areas if they exist
-            const area = document.getElementById(key + "-area");
             if (area) {
                 area.innerHTML = entry.content;
             }
@@ -149,7 +168,10 @@ function Root({ initialSettings, hadSavedSettings }) {
             // Update settings state if settings changed
             if (key === 'leatherbound-settings') {
                 try {
-                    setSettings(JSON.parse(entry.content));
+                    const parsed = JSON.parse(entry.content);
+                    // Mark as already-synced so the [settings] effect doesn't re-stamp it.
+                    settingsRef.current = JSON.stringify(parsed);
+                    setSettings(parsed);
                 } catch (e) {
                     console.error("Failed to parse synced settings", e);
                 }
@@ -164,6 +186,9 @@ function Root({ initialSettings, hadSavedSettings }) {
 
         const syncData = async () => {
             if (!navigator.onLine) return;
+
+            // Stand down while a forced pull/push is running to avoid racing (and clobbering) it.
+            if (forceOpRef.current) return;
 
             // Flush any pending edits from the text areas into localStorage first, so
             // this pass sees the latest content (keydown/paste listeners can lag a keystroke).
@@ -182,9 +207,12 @@ function Root({ initialSettings, hadSavedSettings }) {
             const initialSync = !lastSyncRaw;
 
             SYNC_KEYS.forEach(key => {
-                // On first login, don't push local data; ask server for its latest copy
+                // On first login, let the server's copy win (timestamp 0 means any existing
+                // server entry is returned to us) but still include local content: that way a
+                // key the server doesn't have yet (e.g. local-only notes on a fresh account)
+                // gets created instead of being stranded forever below last_sync.
                 if (initialSync) {
-                    dataToSync[key] = { timestamp: 0 };
+                    dataToSync[key] = { timestamp: 0, content: localStorage.getItem(key) };
                     return;
                 }
 
@@ -224,33 +252,79 @@ function Root({ initialSettings, hadSavedSettings }) {
         // Flush pending edits so we push exactly what is on screen.
         saveAreas();
 
-        const now = Date.now();
-        const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
-        const dataToPush = {};
+        forceOpRef.current = true;
+        try {
+            const now = Date.now();
+            const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+            const dataToPush = {};
 
-        SYNC_KEYS.forEach(key => {
-            const content = localStorage.getItem(key);
-            if (content !== null) {
-                dataToPush[key] = { timestamp: now, content };
-                timestamps[key] = now;
-            }
-        });
+            SYNC_KEYS.forEach(key => {
+                const content = localStorage.getItem(key);
+                if (content !== null) {
+                    dataToPush[key] = { timestamp: now, content };
+                    timestamps[key] = now;
+                }
+            });
 
-        await pushAll(authToken, dataToPush);
+            await pushAll(authToken, dataToPush);
 
-        // Keep local timestamps and last_sync aligned so the background sync stays a no-op.
-        localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
-        localStorage.setItem('last_sync', now.toString());
+            // Keep local timestamps and last_sync aligned so the background sync stays a no-op.
+            localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+            localStorage.setItem('last_sync', now.toString());
+        } finally {
+            forceOpRef.current = false;
+        }
     };
 
-    // Force pull: replace the local copy with the cloud copy.
+    // Force pull: replace the local copy with the cloud copy. Unlike the background pass this
+    // mirrors the cloud exactly: every synced key is overwritten, keys the cloud does not have
+    // are cleared, and it runs even when the cloud is empty.
     const forcePull = async () => {
         if (!authToken) throw new Error('You must be logged in to sync.');
         if (!navigator.onLine) throw new Error('You must be online to sync.');
 
-        const result = await pullAll(authToken);
-        applyServerData(result.data);
-        localStorage.setItem('last_sync', Date.now().toString());
+        forceOpRef.current = true;
+        try {
+            const result = await pullAll(authToken);
+            const data = (result && result.data) || {};
+            const now = Date.now();
+            const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+
+            SYNC_KEYS.forEach(key => {
+                const entry = data[key];
+                const hasEntry = entry && entry.content != null;
+
+                // Don't wipe settings if the cloud has none — that would strip the UI back to
+                // defaults. Text areas are safe to clear to empty.
+                if (key === 'leatherbound-settings') {
+                    if (!hasEntry) return;
+                    localStorage.setItem(key, entry.content);
+                    timestamps[key] = entry.timestamp != null ? entry.timestamp : now;
+                    try {
+                        const parsed = JSON.parse(entry.content);
+                        settingsRef.current = JSON.stringify(parsed);
+                        setSettings(parsed);
+                    } catch (e) {
+                        console.error("Failed to parse pulled settings", e);
+                    }
+                    return;
+                }
+
+                const content = hasEntry ? entry.content : '';
+                localStorage.setItem(key, content);
+                timestamps[key] = hasEntry && entry.timestamp != null ? entry.timestamp : now;
+
+                const area = document.getElementById(key + "-area");
+                if (area) {
+                    area.innerHTML = content;
+                }
+            });
+
+            localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+            localStorage.setItem('last_sync', now.toString());
+        } finally {
+            forceOpRef.current = false;
+        }
     };
 
     const handleSaveSettings = (newSettings) => {
