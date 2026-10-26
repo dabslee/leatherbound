@@ -6,6 +6,14 @@ function apiFetch(path, options) {
     return fetch(url, options);
 }
 
+// Build an Error that carries the HTTP status, so callers can tell an expired/invalid
+// session (401) apart from a generic failure and react (e.g. prompt a re-login).
+function apiError(response, fallback) {
+    const err = new Error(fallback);
+    err.status = response.status;
+    return err;
+}
+
 export async function login(username, password) {
     const response = await apiFetch('/api/login', {
         method: 'POST',
@@ -40,7 +48,7 @@ export async function sync(token, data) {
         body: JSON.stringify({ data })
     });
     if (!response.ok) {
-        throw new Error('Sync failed');
+        throw apiError(response, 'Sync failed');
     }
     return response.json();
 }
@@ -55,7 +63,7 @@ export async function pullAll(token) {
         }
     });
     if (!response.ok) {
-        throw new Error('Force pull failed');
+        throw apiError(response, 'Force pull failed');
     }
     return response.json();
 }
@@ -71,7 +79,7 @@ export async function pushAll(token, data) {
         body: JSON.stringify({ data })
     });
     if (!response.ok) {
-        throw new Error('Force push failed');
+        throw apiError(response, 'Force push failed');
     }
     return response.json();
 }

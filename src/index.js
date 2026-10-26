@@ -72,6 +72,28 @@ function Root({ initialSettings, hadSavedSettings }) {
     // and can't race (and clobber) the forced operation.
     const forceOpRef = useRef(false);
 
+    // Message shown in Settings when the cloud session ends (e.g. the login token expired).
+    // The background sync can't recover a dead token on its own, so instead of hammering the
+    // server with 401s forever and silently pretending to sync, we surface this and drop back
+    // to the logged-out state.
+    const [authNotice, setAuthNotice] = useState('');
+
+    // Clear the notice once the user has authenticated again.
+    useEffect(() => {
+        if (authToken) setAuthNotice('');
+    }, [authToken]);
+
+    // The cloud rejected our token (expired/invalid). End the session so the UI stops claiming
+    // it's syncing and prompts a re-login. Local data and timestamps are kept, so logging back
+    // in performs a normal timestamp merge rather than a destructive pull.
+    const handleSessionExpired = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('username');
+        setAuthToken(null);
+        setAuthNotice('Your session expired. Please log in again to resume syncing.');
+    };
+
     useEffect(() => {
         if ((hadSavedSettings && settings.weatherLocation) || !navigator.geolocation || !weatherApiKey) return;
         let cancelled = false;
@@ -234,6 +256,12 @@ function Root({ initialSettings, hadSavedSettings }) {
                 applyServerData(result.updates);
                 localStorage.setItem('last_sync', syncStart.toString());
             } catch (e) {
+                // An expired/invalid token (401) will fail on every pass; stop retrying
+                // silently and prompt the user to log in again.
+                if (e && e.status === 401) {
+                    handleSessionExpired();
+                    return;
+                }
                 console.error("Sync failed", e);
             }
         };
@@ -271,6 +299,9 @@ function Root({ initialSettings, hadSavedSettings }) {
             // Keep local timestamps and last_sync aligned so the background sync stays a no-op.
             localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
             localStorage.setItem('last_sync', now.toString());
+        } catch (e) {
+            if (e && e.status === 401) handleSessionExpired();
+            throw e;
         } finally {
             forceOpRef.current = false;
         }
@@ -322,6 +353,9 @@ function Root({ initialSettings, hadSavedSettings }) {
 
             localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
             localStorage.setItem('last_sync', now.toString());
+        } catch (e) {
+            if (e && e.status === 401) handleSessionExpired();
+            throw e;
         } finally {
             forceOpRef.current = false;
         }
@@ -369,6 +403,7 @@ function Root({ initialSettings, hadSavedSettings }) {
                 setAuthToken={setAuthToken}
                 forcePush={forcePush}
                 forcePull={forcePull}
+                authNotice={authNotice}
             />
         </React.StrictMode>
     );
@@ -379,10 +414,15 @@ ReactDOM.render(
   <Root initialSettings={initialSettings} hadSavedSettings={Boolean(parsedSettings)} />,
   document.getElementById('root'),
   function() {
-    window.onunload = function() {saveAreas();}
-    window.onkeypress = function() {saveAreas();}
-    window.onkeydown = function() {saveAreas(); console.log("saved");}
-    window.onpaste = function() {saveAreas();}
+    // Flush edits to localStorage as the user types/pastes and when the page is being
+    // hidden or closed. Note: 'unload' is blocked by Chrome's permissions policy, so use
+    // 'pagehide' and 'visibilitychange' (hidden) instead to persist on leave.
+    window.addEventListener('keydown', saveAreas);
+    window.addEventListener('paste', saveAreas);
+    window.addEventListener('pagehide', saveAreas);
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') saveAreas();
+    });
   }
 );
 

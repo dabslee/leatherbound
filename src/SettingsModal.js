@@ -25,7 +25,8 @@ export default class SettingsModal extends Component {
             authMessage: '',
             isOnline: navigator.onLine,
             syncMessage: '',
-            syncBusy: false
+            syncBusy: false,
+            syncTick: 0
         };
     }
 
@@ -33,12 +34,18 @@ export default class SettingsModal extends Component {
         document.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('online', this.handleOnlineStatus);
         window.addEventListener('offline', this.handleOnlineStatus);
+        // Re-read last_sync periodically so the "Last synced" line and status stay live
+        // while the panel is open (localStorage changes don't trigger a React re-render).
+        this.syncRefreshInterval = setInterval(() => {
+            if (this.props.isOpen) this.setState({ syncTick: Date.now() });
+        }, 3000);
     }
 
     componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('online', this.handleOnlineStatus);
         window.removeEventListener('offline', this.handleOnlineStatus);
+        clearInterval(this.syncRefreshInterval);
     }
 
     handleOnlineStatus = () => {
@@ -238,6 +245,20 @@ export default class SettingsModal extends Component {
         return `Last synced: ${formatted}`;
     };
 
+    getSyncStatusText = () => {
+        if (!this.state.isOnline) {
+            return 'Offline — changes will sync when you reconnect.';
+        }
+        const lastSyncRaw = localStorage.getItem('last_sync');
+        const lastSync = lastSyncRaw ? parseInt(lastSyncRaw, 10) : 0;
+        // The background pass runs every 10s; a last_sync within the last 30s means it's
+        // healthy. If it falls behind, say so rather than always claiming it's syncing.
+        if (lastSync && (Date.now() - lastSync) < 30000) {
+            return 'Your data is syncing with the cloud.';
+        }
+        return 'Waiting to sync…';
+    };
+
     renderData() {
         const userId = localStorage.getItem('user_id');
         const username = localStorage.getItem('username');
@@ -254,7 +275,7 @@ export default class SettingsModal extends Component {
                     <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
                         <p>Logged in as <b>{username}</b></p>
                         <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
-                            Your data is syncing with the cloud.<br/>{this.getLastSyncText()}
+                            {this.getSyncStatusText()}<br/>{this.getLastSyncText()}
                         </p>
                         <div style={{marginTop: '12px', borderTop: '1px solid rgba(128,128,128,0.2)', paddingTop: '12px'}}>
                             <p style={{fontSize: '0.16rem', marginBottom: '8px'}}>
@@ -332,6 +353,11 @@ export default class SettingsModal extends Component {
                     </div>
                 ) : (
                     <div style={{marginBottom: '0.3rem', padding: '0.15rem', border: '0.01rem solid rgba(0,0,0,0.1)', borderRadius: '0.08rem'}}>
+                         {this.props.authNotice && (
+                             <p style={{color: 'red', marginBottom: '10px', fontSize: '0.16rem'}}>
+                                 {this.props.authNotice}
+                             </p>
+                         )}
                          {!isOnline && (
                              <p style={{color: 'red', marginBottom: '10px', fontSize: '0.16rem'}}>
                                  You must be online to log in or register.
