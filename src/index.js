@@ -77,14 +77,21 @@ function Root({ initialSettings, hadSavedSettings }) {
     // server with 401s forever and silently pretending to sync, we surface this and drop back
     // to the logged-out state.
     const [authNotice, setAuthNotice] = useState('');
+    // Controls the "Session expired" prompt that pops up (even when Settings is closed).
+    const [sessionExpiredOpen, setSessionExpiredOpen] = useState(false);
+    // When opening Settings programmatically we can request a specific tab (e.g. Data).
+    const [settingsOpenToTab, setSettingsOpenToTab] = useState(null);
 
-    // Clear the notice once the user has authenticated again.
+    // Clear the expiry state once the user has authenticated again.
     useEffect(() => {
-        if (authToken) setAuthNotice('');
+        if (authToken) {
+            setAuthNotice('');
+            setSessionExpiredOpen(false);
+        }
     }, [authToken]);
 
     // The cloud rejected our token (expired/invalid). End the session so the UI stops claiming
-    // it's syncing and prompts a re-login. Local data and timestamps are kept, so logging back
+    // it's syncing, and prompt a re-login. Local data and timestamps are kept, so logging back
     // in performs a normal timestamp merge rather than a destructive pull.
     const handleSessionExpired = () => {
         localStorage.removeItem('auth_token');
@@ -92,6 +99,12 @@ function Root({ initialSettings, hadSavedSettings }) {
         localStorage.removeItem('username');
         setAuthToken(null);
         setAuthNotice('Your session expired. Please log in again to resume syncing.');
+        setSessionExpiredOpen(true);
+    };
+
+    const openSettings = (tab = null) => {
+        setSettingsOpenToTab(tab);
+        setIsSettingsOpen(true);
     };
 
     useEffect(() => {
@@ -255,6 +268,13 @@ function Root({ initialSettings, hadSavedSettings }) {
                 const result = await sync(authToken, dataToSync);
                 applyServerData(result.updates);
                 localStorage.setItem('last_sync', syncStart.toString());
+
+                // The server hands back a fresh token when ours is past halfway through its
+                // lifetime, so a continuously-open tab never gets logged out mid-use.
+                if (result.token && result.token !== authToken) {
+                    localStorage.setItem('auth_token', result.token);
+                    setAuthToken(result.token);
+                }
             } catch (e) {
                 // An expired/invalid token (401) will fail on every pass; stop retrying
                 // silently and prompt the user to log in again.
@@ -372,7 +392,7 @@ function Root({ initialSettings, hadSavedSettings }) {
                 <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end'}}>
                     <div id="logo">&sect; leatherbound</div>
                     <button
-                        onClick={() => setIsSettingsOpen(true)}
+                        onClick={() => openSettings()}
                         style={{
                             marginTop: '0.05rem',
                             background: 'transparent',
@@ -388,7 +408,7 @@ function Root({ initialSettings, hadSavedSettings }) {
                     </button>
                 </div>
             </div>
-            <App settings={settings} openSettings={() => setIsSettingsOpen(true)} />
+            <App settings={settings} openSettings={() => openSettings()} />
             <div id="footer-container">
                 <p>&#169; Brandon Lee, {new Date().getFullYear()} &#8226; all rights reserved</p>
                 <div style={{display:"flex", flexDirection: "row", alignItems: "center"}}>
@@ -404,7 +424,59 @@ function Root({ initialSettings, hadSavedSettings }) {
                 forcePush={forcePush}
                 forcePull={forcePull}
                 authNotice={authNotice}
+                openToTab={settingsOpenToTab}
             />
+            {sessionExpiredOpen && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 10000,
+                        background: 'rgba(0,0,0,0.55)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                >
+                    <div style={{
+                        background: 'var(--paper-color)', color: 'var(--text-color)',
+                        border: '1px solid rgba(128,128,128,0.4)', borderRadius: '8px',
+                        padding: '24px', maxWidth: '420px', width: 'calc(100% - 48px)',
+                        fontFamily: 'var(--body-font)', boxShadow: '0 8px 30px rgba(0,0,0,0.4)'
+                    }}>
+                        <h2 style={{marginTop: 0, fontFamily: 'var(--header-font)', fontSize: '28px'}}>
+                            Session expired
+                        </h2>
+                        <p style={{fontSize: '16px', lineHeight: 1.5}}>
+                            Your login session expired, so your notes, schedule, and settings have
+                            stopped syncing to the cloud. You can keep using Leatherbound on this
+                            device and log back in whenever you like.
+                        </p>
+                        <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px'}}>
+                            <button
+                                onClick={() => setSessionExpiredOpen(false)}
+                                style={{
+                                    padding: '8px 16px', cursor: 'pointer',
+                                    background: 'transparent', border: '1px solid rgba(128,128,128,0.5)',
+                                    color: 'var(--text-color)', borderRadius: '4px',
+                                    fontFamily: 'var(--body-font)', fontSize: '16px'
+                                }}
+                            >
+                                Continue offline
+                            </button>
+                            <button
+                                onClick={() => { setSessionExpiredOpen(false); openSettings('data'); }}
+                                style={{
+                                    padding: '8px 16px', cursor: 'pointer',
+                                    background: 'var(--paper-color)', border: '1px solid var(--text-color)',
+                                    color: 'var(--text-color)', borderRadius: '4px',
+                                    fontFamily: 'var(--body-font)', fontSize: '16px', fontWeight: 'bold'
+                                }}
+                            >
+                                Log in
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </React.StrictMode>
     );
 }

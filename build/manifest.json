@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "short_name": "leatherbound",
   "name": "Leatherbound New Tab",
-  "version": "1.1",
+  "version": "1.2",
   "description": "A configurable new tab extension.",
   "chrome_url_overrides": {
     "newtab": "index.html"

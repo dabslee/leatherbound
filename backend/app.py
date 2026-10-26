@@ -23,12 +23,38 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+# Tokens last 30 days, but an actively-syncing client is handed a fresh one once it is past
+# the halfway mark (see /api/sync). So a session in regular use never expires out from under
+# the user; only a client that stays idle for the full window has to log in again.
+TOKEN_LIFETIME = datetime.timedelta(days=30)
+TOKEN_REFRESH_AFTER = TOKEN_LIFETIME / 2
+
 def generate_token(user_id):
+    now = datetime.datetime.utcnow()
     payload = {
         'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        'iat': now,
+        'exp': now + TOKEN_LIFETIME
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+def bearer_token():
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        return auth_header.split(' ', 1)[1]
+    return None
+
+def token_should_refresh(token):
+    """True if the token is valid but already past the halfway point of its lifetime."""
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+    except jwt.InvalidTokenError:
+        return False
+    exp = payload.get('exp')
+    if not exp:
+        return False
+    exp_dt = datetime.datetime.utcfromtimestamp(exp)
+    return (exp_dt - datetime.datetime.utcnow()) < TOKEN_REFRESH_AFTER
 
 def verify_token(token):
     try:
@@ -134,7 +160,15 @@ def sync():
 
     db.session.commit()
 
-    return jsonify({'updates': updates}), 200
+    response = {'updates': updates}
+
+    # Slide the session forward: if the caller's token is past halfway, hand back a fresh one
+    # so a continuously-open client never gets logged out mid-use.
+    token = bearer_token()
+    if token and token_should_refresh(token):
+        response['token'] = generate_token(user_id)
+
+    return jsonify(response), 200
 
 @app.route('/api/pull', methods=['POST'])
 def pull():

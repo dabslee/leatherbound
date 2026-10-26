@@ -48,6 +48,14 @@ export default class SettingsModal extends Component {
         clearInterval(this.syncRefreshInterval);
     }
 
+    componentDidUpdate(prevProps) {
+        // When opened programmatically with a requested tab (e.g. the "Log in" prompt opens
+        // straight to Data), switch to it as the panel opens.
+        if (!prevProps.isOpen && this.props.isOpen && this.props.openToTab) {
+            this.setState({ activeTab: this.props.openToTab });
+        }
+    }
+
     handleOnlineStatus = () => {
         this.setState({ isOnline: navigator.onLine });
     };
