@@ -55,32 +55,19 @@ function circlePos(emotion, rimPct = RIM) {
     return { left: 50 + r * Math.cos(rad), top: 50 - r * Math.sin(rad) };
 }
 
-function CircumplexPicker({ selected, onToggle }) {
+function EmotionChecklist({ selected, onToggle }) {
     return (
-        <div className="mood-circumplex" role="group" aria-label="Emotion circumplex">
-            <div className="mood-circle" />
-            <div className="mood-axis mood-axis-v" />
-            <div className="mood-axis mood-axis-h" />
-            <span className="mood-axis-label" style={{ left: '50%', top: '19%' }}>activation</span>
-            <span className="mood-axis-label" style={{ left: '50%', top: '81%' }}>deactivation</span>
-            <span className="mood-axis-label" style={{ left: '82%', top: '50%' }}>pleasant</span>
-            <span className="mood-axis-label" style={{ left: '18%', top: '50%' }}>unpleasant</span>
-            {EMOTIONS.map(e => {
-                const pos = circlePos(e);
-                const on = selected.includes(e.id);
-                return (
-                    <button
-                        key={e.id}
-                        type="button"
-                        aria-pressed={on}
-                        className={`mood-emotion ${e.core ? 'core' : ''} ${on ? 'selected' : ''}`}
-                        style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
-                        onClick={() => onToggle(e.id)}
-                    >
-                        {e.label}
-                    </button>
-                );
-            })}
+        <div className="mood-checklist" role="group" aria-label="Emotions">
+            {EMOTIONS.filter(e => !e.core).map(e => (
+                <label key={e.id} className="mood-check">
+                    <input
+                        type="checkbox"
+                        checked={selected.includes(e.id)}
+                        onChange={() => onToggle(e.id)}
+                    />
+                    <span className="mood-check-label">{e.label}</span>
+                </label>
+            ))}
         </div>
     );
 }
@@ -234,7 +221,7 @@ class MoodLogForm extends Component {
                     <fieldset className="mood-field mood-form-col mood-form-emotions">
                         <legend>Emotions <span className="mood-opt">(optional, pick any)</span></legend>
                         <div className="mood-prompt">{s.kind === 'moment' ? 'What best describes how you feel right now?' : 'What best describes how you felt today?'}</div>
-                        <CircumplexPicker selected={s.emotions} onToggle={this.toggleEmotion} />
+                        <EmotionChecklist selected={s.emotions} onToggle={this.toggleEmotion} />
                     </fieldset>
                 </div>
 

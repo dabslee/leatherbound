@@ -28,6 +28,7 @@ const defaultSettings = {
     todoName: 'To do',
     scheduleName: 'Schedule',
     notesName: 'Notes',
+    diaryEnabled: true,
     moodTrackerEnabled: false,
     weatherLocation: '', // Set via geolocation on first load
     quickLinks: [

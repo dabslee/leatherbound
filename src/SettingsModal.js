@@ -607,18 +607,34 @@ export default class SettingsModal extends Component {
                         placeholder="Notes"
                     />
                 </div>
-                <h3 style={{marginTop: '0.25rem', marginBottom: '0.05rem', fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>Pages</h3>
+                <div className="setting-row" style={{marginBottom: 0}}>
+                    <label>Pages</label>
+                </div>
+                <label style={{display: 'flex', alignItems: 'flex-start', gap: '0.1rem', cursor: 'pointer', marginBottom: '0.15rem'}}>
+                    <input
+                        type="checkbox"
+                        checked={settings.diaryEnabled !== false}
+                        onChange={(e) => this.updateSetting('diaryEnabled', e.target.checked)}
+                        style={{marginTop: '0.05rem', marginLeft: 0, marginRight: 0, width: '0.16rem', height: '0.16rem', minWidth: '0.16rem', flex: '0 0 0.16rem'}}
+                    />
+                    <span>
+                        Scratchpad
+                        <span style={{display: 'block', fontSize: '0.15rem', opacity: 0.7, fontWeight: 'normal'}}>
+                            The free-form writing page right after the home page.
+                        </span>
+                    </span>
+                </label>
                 <label style={{display: 'flex', alignItems: 'flex-start', gap: '0.1rem', cursor: 'pointer'}}>
                     <input
                         type="checkbox"
                         checked={!!settings.moodTrackerEnabled}
                         onChange={(e) => this.updateSetting('moodTrackerEnabled', e.target.checked)}
-                        style={{marginTop: '0.05rem', width: '0.16rem', height: '0.16rem'}}
+                        style={{marginTop: '0.05rem', marginLeft: 0, marginRight: 0, width: '0.16rem', height: '0.16rem', minWidth: '0.16rem', flex: '0 0 0.16rem'}}
                     />
                     <span>
                         Mood tracker
                         <span style={{display: 'block', fontSize: '0.15rem', opacity: 0.7, fontWeight: 'normal'}}>
-                            Adds a page after the diary for logging your mood and viewing trends over time.
+                            Adds a page after the scratchpad for logging your mood and viewing trends over time.
                         </span>
                     </span>
                 </label>

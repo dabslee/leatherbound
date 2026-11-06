@@ -48,9 +48,12 @@ class App extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    // If the mood tracker is switched off while it's open, fall back to the diary.
-    if (!this.props.settings.moodTrackerEnabled && this.state.page === "mood") {
-      this.setState({page: "diary"});
+    // If the page being viewed is switched off, fall back to the nearest enabled one.
+    const s = this.props.settings;
+    if (!s.moodTrackerEnabled && this.state.page === "mood") {
+      this.setState({page: s.diaryEnabled !== false ? "diary" : "home"});
+    } else if (s.diaryEnabled === false && this.state.page === "diary") {
+      this.setState({page: "home"});
     }
     if (prevProps.settings.weatherLocation !== this.props.settings.weatherLocation) {
       this.weatherUpdate(this.props.settings.weatherLocation);
@@ -140,6 +143,9 @@ class App extends Component {
     const today = weatherData.today || {};
     const tomorrow = weatherData.tomorrow || {};
 
+    const diaryOn = settings.diaryEnabled !== false;
+    const nextAfterHome = diaryOn ? "diary" : (settings.moodTrackerEnabled ? "mood" : null);
+
     // prep text
     var schedule = localStorage.getItem("schedule");
     var todo = localStorage.getItem("todo");
@@ -223,16 +229,20 @@ class App extends Component {
                   </div>
               </div>
           </div>
-          <div id="todiary" className="navigator" onClick={() => this.setState({page: "diary"})}>&#12297;</div>
+          {nextAfterHome && (
+            <div id="todiary" className="navigator" onClick={() => this.setState({page: nextAfterHome})}>&#12297;</div>
+          )}
         </div>
       );
     } else if (this.state.page === "mood" && settings.moodTrackerEnabled) {
       return (
         <div id="content-container" style={{minHeight: 0}}>
-          <div id="todiary" className="navigator" onClick={() => this.setState({page: "diary"})}>&#12296;</div>
+          <div id="todiary" className="navigator" onClick={() => this.setState({page: diaryOn ? "diary" : "home"})}>&#12296;</div>
           <MoodTracker />
         </div>
       );
+    } else if (!diaryOn) {
+      return null;
     } else {
       var diary = localStorage.getItem("diary");
       return (

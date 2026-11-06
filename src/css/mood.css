@@ -123,6 +123,22 @@
 }
 .mood-when input { flex: 1; }
 
+/* Match the Settings dropdowns, including the popup option list. */
+.mood-select {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: black;
+    border-color: #ccc;
+    border-radius: 0.06rem;
+    padding: 0.05rem 0.08rem;
+}
+.mood-select option { background-color: #fff; color: black; }
+[data-theme="dark"] .mood-select {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: var(--text-color);
+    border-color: #555;
+}
+[data-theme="dark"] .mood-select option { background-color: #222; color: var(--text-color); }
+
 .mood-scale { display: flex; gap: 0.06rem; }
 .mood-scale-btn {
     flex: 1;
@@ -437,4 +453,27 @@
     .mood-log-btn { margin-left: 0; }
     .mood-form-cols { grid-template-columns: 1fr; }
     .mood-logitem-note { margin-left: 0; }
+}
+
+/* emotion checklist: native checkboxes, same as the Settings modal */
+.mood-checklist {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(1.6rem, 1fr));
+    gap: 0.06rem 0.16rem;
+    margin-top: 0.06rem;
+}
+.mood-check {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+    cursor: pointer;
+    user-select: none;
+}
+.mood-check input {
+    flex: 0 0 0.16rem;
+    width: 0.16rem;
+    height: 0.16rem;
+    min-width: 0.16rem;
+    margin: 0;
+    cursor: pointer;
 }
