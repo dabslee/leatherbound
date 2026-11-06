@@ -251,6 +251,7 @@
     outline-color: var(--post-outline-color);
     outline-width: var(--post-outline-width);
     padding: 0.14rem 0.22rem 0.1rem;
+    margin-bottom: 0.5rem;
 }
 .mood-panel-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.08rem; margin-bottom: 0.1rem; }
 .mood-carousel-nav { display: flex; align-items: center; gap: 0.04rem; }
@@ -428,6 +429,7 @@
 
 @media (max-width: 768px) {
     .mood-page { font-size: 0.22rem; }
+    .mood-panel { margin-bottom: 0; }
     .mood-panel-body { flex: none; height: 5rem; }
     .mood-tab { font-size: 0.24rem; padding: 0 0.05rem; }
     .mood-log-btn { margin-left: 0; }
