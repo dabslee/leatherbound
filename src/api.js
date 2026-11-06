@@ -83,3 +83,41 @@ export async function pushAll(token, data) {
     }
     return response.json();
 }
+
+// ---- Personal API tokens (for AI agents / scripts using the mood API) ----
+
+function authHeaders(token) {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+async function jsonOrThrow(response, fallback) {
+    if (!response.ok) {
+        let message = fallback;
+        try { message = (await response.json()).error || fallback; } catch (e) { /* not JSON */ }
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+    }
+    return response.json();
+}
+
+export async function listApiTokens(token) {
+    const response = await apiFetch('/api/tokens', { headers: authHeaders(token) });
+    return (await jsonOrThrow(response, 'Could not load API tokens')).tokens;
+}
+
+export async function createApiToken(token, { name, scopes, expiresInDays }) {
+    const response = await apiFetch('/api/tokens', {
+        method: 'POST',
+        headers: authHeaders(token),
+        body: JSON.stringify({ name, scopes, expires_in_days: expiresInDays })
+    });
+    return jsonOrThrow(response, 'Could not create API token');
+}
+
+export async function revokeApiToken(token, id) {
+    const response = await apiFetch(`/api/tokens/${id}`, { method: 'DELETE', headers: authHeaders(token) });
+    return jsonOrThrow(response, 'Could not revoke API token');
+}
+
+export const API_BASE_URL = API_BASE;

@@ -91,20 +91,34 @@ export function countWords(text) {
 
 /* ---------- storage ---------- */
 
-export function loadLogs() {
+// Raw stored records: logs plus tombstones ({ id, deleted: true, updatedAt }) for deleted logs.
+// Tombstones let the server merge copies from other devices and the API without
+// resurrecting anything that was deleted.
+function loadRecords() {
     try {
         const raw = localStorage.getItem(MOOD_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed.filter(isValidLog) : [];
+        return Array.isArray(parsed) ? parsed.filter(r => r && r.id) : [];
     } catch (e) {
         return [];
     }
 }
 
+export function loadLogs() {
+    return loadRecords().filter(r => !r.deleted && isValidLog(r));
+}
+
+// Save the full set of live logs. Any log that was stored before but is missing now
+// (deleted, or a whole-day log replaced by another) is recorded as a tombstone.
 export function saveLogs(logs) {
-    localStorage.setItem(MOOD_KEY, JSON.stringify(logs));
+    const now = Date.now();
+    const keep = new Set(logs.map(l => l.id));
+    const tombstones = loadRecords()
+        .filter(r => !keep.has(r.id))
+        .map(r => (r.deleted ? r : { id: r.id, deleted: true, updatedAt: now }));
+    localStorage.setItem(MOOD_KEY, JSON.stringify([...logs, ...tombstones]));
     const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
-    timestamps[MOOD_KEY] = Date.now();
+    timestamps[MOOD_KEY] = now;
     localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
 }
 

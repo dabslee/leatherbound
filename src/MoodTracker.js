@@ -635,12 +635,12 @@ export default class MoodTracker extends Component {
     handleSave = (log) => {
         const editing = !!this.state.editing;
         this.setState({ formKind: 'moment' });
-        this.persist(upsertLog(this.state.logs, log), editing ? 'Log updated.' : 'Logged. Thanks for checking in!');
+        this.persist(upsertLog(loadLogs(), log), editing ? 'Log updated.' : 'Logged. Thanks for checking in!');
     };
 
     handleDelete = (log) => {
         if (!window.confirm('Delete this mood log?')) return;
-        this.persist(this.state.logs.filter(l => l.id !== log.id), 'Log deleted.');
+        this.persist(loadLogs().filter(l => l.id !== log.id), 'Log deleted.');
     };
 
     openNew = () => this.setState({ modalOpen: true, editing: null, formKind: 'moment', formKey: this.state.formKey + 1 });

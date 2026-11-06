@@ -1,5 +1,5 @@
 import {
-    countWords, dailyValues, historicalBuckets, cycleBuckets, upsertLog, periodRange,
+    loadLogs, saveLogs, countWords, dailyValues, historicalBuckets, cycleBuckets, upsertLog, periodRange,
     dateKey, currentStreak, emotionStats, summarize
 } from './moodUtils';
 
@@ -104,5 +104,18 @@ describe('moodUtils', () => {
         expect(s.happiness).toBe(3);
         expect(s.days).toBe(2);
         expect(s.logs).toBe(3);
+    });
+
+    test('saveLogs keeps tombstones for removed logs', () => {
+        localStorage.clear();
+        const a = moment('a', 2026, 11, 4, 9, 3, 3);
+        const b = moment('b', 2026, 11, 4, 10, 4, 4);
+        saveLogs([a, b]);
+        saveLogs([a]);
+        const raw = JSON.parse(localStorage.getItem('mood'));
+        expect(raw.find(r => r.id === 'b')).toMatchObject({ deleted: true });
+        expect(loadLogs().map(l => l.id)).toEqual(['a']);
+        saveLogs([a]);
+        expect(JSON.parse(localStorage.getItem('mood')).filter(r => r.deleted)).toHaveLength(1);
     });
 });

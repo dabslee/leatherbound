@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { apiKey } from './App';
 import { login, register } from './api';
+import ApiTokens from './ApiTokens';
 
 const iconGroups = {
     "Default": ['gmail', 'google-drive', 'google-calendar', 'fox', 'spotify', 'github--v1', 'blackboard-app', 'canvas-student'],
@@ -432,6 +433,8 @@ export default class SettingsModal extends Component {
                         {this.state.authMessage && <p style={{marginTop: '10px', color: this.state.authMessage.includes('success') ? 'green' : 'red'}}>{this.state.authMessage}</p>}
                     </div>
                 )}
+
+                {userId && <ApiTokens />}
 
                 <h3 style={{marginTop: '0.2rem', fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>Backup & Restore</h3>
                 <p style={{fontSize: '0.18rem', marginBottom: '0.15rem'}}>

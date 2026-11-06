@@ -12,6 +12,7 @@ Leatherbound is a custom new tab page for Google Chrome built with React and a s
 *   **Productivity Tools:** Built-in areas for managing To-Do lists, Schedules, and Notes.
 *   **Rich Text Formatting:** Ctrl-B for bolding, Ctrl-I for italics, Ctrl-U for underlining, Ctrl+Shift+7 for numbered lists, Ctrl+Shift+8 for bullet-pointed lists.
 *   **Mood Tracker (optional):** Turn on in Settings → Sections. Log how you feel right now or for a whole day (happiness, contentment, emotions from a circumplex, energy, and a short note) from a quick pop-up, then flip between trend, calendar, emotion, and log views of your mood over time or your typical hourly/weekly/monthly/yearly cycles.
+*   **Mood API for AI agents:** Create a long-lived personal API token in Settings → Data → API Access and let an agent read, log, and summarize your moods. See [`backend/API.md`](backend/API.md).
 *   **Weather Updates:** Real-time weather information based on your location (City name or Zip code).
 *   **Customization:** personalized the look and feel with different fonts, themes (Light/Dark/System), and font sizes.
 *   **Cross-Session Persistence:** Settings and notes persist across sessions using cookies, or even cross-devices via authentication with a Flask backend.
