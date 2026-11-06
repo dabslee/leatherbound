@@ -11,7 +11,12 @@ import { sync, pullAll, pushAll } from './api';
 const weatherApiKey = process.env.REACT_APP_WEATHER_API_KEY;
 
 // Keys that are synchronized with the cloud.
-const SYNC_KEYS = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
+const SYNC_KEYS = ["schedule", "todo", "notes", "diary", "mood", "leatherbound-settings"];
+
+// Let components that keep their own copy of synced data (e.g. the mood tracker) re-read it.
+function announceDataUpdate(keys) {
+    if (keys.length) window.dispatchEvent(new CustomEvent('leatherbound:data-updated', { detail: { keys } }));
+}
 
 /* Default Settings */
 const defaultSettings = {
@@ -23,6 +28,7 @@ const defaultSettings = {
     todoName: 'To do',
     scheduleName: 'Schedule',
     notesName: 'Notes',
+    moodTrackerEnabled: false,
     weatherLocation: '', // Set via geolocation on first load
     quickLinks: [
         { title: 'Mail', url: 'https://www.gmail.com', icon: 'gmail' },
@@ -182,6 +188,7 @@ function Root({ initialSettings, hadSavedSettings }) {
         if (!dataMap || Object.keys(dataMap).length === 0) return;
 
         const timestamps = JSON.parse(localStorage.getItem('leatherbound-timestamps') || '{}');
+        const applied = [];
 
         Object.keys(dataMap).forEach(key => {
             const entry = dataMap[key];
@@ -195,6 +202,7 @@ function Root({ initialSettings, hadSavedSettings }) {
 
             localStorage.setItem(key, entry.content);
             timestamps[key] = entry.timestamp;
+            applied.push(key);
 
             if (area) {
                 area.innerHTML = entry.content;
@@ -214,6 +222,7 @@ function Root({ initialSettings, hadSavedSettings }) {
         });
 
         localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
+        announceDataUpdate(applied);
     };
 
     useEffect(() => {
@@ -373,6 +382,7 @@ function Root({ initialSettings, hadSavedSettings }) {
 
             localStorage.setItem('leatherbound-timestamps', JSON.stringify(timestamps));
             localStorage.setItem('last_sync', now.toString());
+            announceDataUpdate(SYNC_KEYS);
         } catch (e) {
             if (e && e.status === 401) handleSessionExpired();
             throw e;

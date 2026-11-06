@@ -1,0 +1,740 @@
+import React, { Component, useState } from 'react';
+import './css/mood.css';
+import {
+    METRICS, EMOTIONS, EMOTION_BY_ID, NOTE_WORD_LIMIT, MOOD_EVENT, MOOD_KEY,
+    loadLogs, saveLogs, upsertLog, newId, countWords,
+    dateKey, parseDateKey, toDateTimeLocal, addDays,
+    periodRange, shiftAnchor, periodTitle, historicalBuckets, cycleBuckets,
+    logsInRange, summarize, emotionStats, currentStreak, dailyValues, MONTHS
+} from './moodUtils';
+
+const SERIES = [
+    { id: 'happiness', label: 'Happiness' },
+    { id: 'contentment', label: 'Contentment' },
+    { id: 'energy', label: 'Energy' }
+];
+
+const fmt = (v) => (v == null ? '–' : v.toFixed(1));
+
+/* ======================================================================
+   Logging form
+   ====================================================================== */
+
+function ScaleInput({ metric, value, onChange, kind }) {
+    return (
+        <fieldset className="mood-field">
+            <legend>
+                {metric.label}{metric.required ? <span className="mood-req"> *</span> : <span className="mood-opt"> (optional)</span>}
+            </legend>
+            <div className="mood-prompt">{metric.prompt[kind]}</div>
+            <div className="mood-scale" role="radiogroup" aria-label={metric.label}>
+                {[1, 2, 3, 4, 5].map(n => (
+                    <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={value === n}
+                        className={`mood-scale-btn ${value === n ? 'selected' : ''}`}
+                        onClick={() => onChange(value === n && !metric.required ? null : n)}
+                    >
+                        {n}
+                    </button>
+                ))}
+            </div>
+            <div className="mood-scale-anchors"><span>{metric.low}</span><span>{metric.high}</span></div>
+        </fieldset>
+    );
+}
+
+// Position on the circumplex as a percentage of the square container.
+// R is the rim radius (as % of the container); inner words sit at 62% of the rim.
+const RIM = 38;
+function circlePos(emotion, rimPct = RIM) {
+    const r = emotion.core ? rimPct : rimPct * 0.62;
+    const rad = emotion.angle * Math.PI / 180;
+    return { left: 50 + r * Math.cos(rad), top: 50 - r * Math.sin(rad) };
+}
+
+function CircumplexPicker({ selected, onToggle }) {
+    return (
+        <div className="mood-circumplex" role="group" aria-label="Emotion circumplex">
+            <div className="mood-circle" />
+            <div className="mood-axis mood-axis-v" />
+            <div className="mood-axis mood-axis-h" />
+            <span className="mood-axis-label" style={{ left: '50%', top: '19%' }}>activation</span>
+            <span className="mood-axis-label" style={{ left: '50%', top: '81%' }}>deactivation</span>
+            <span className="mood-axis-label" style={{ left: '82%', top: '50%' }}>pleasant</span>
+            <span className="mood-axis-label" style={{ left: '18%', top: '50%' }}>unpleasant</span>
+            {EMOTIONS.map(e => {
+                const pos = circlePos(e);
+                const on = selected.includes(e.id);
+                return (
+                    <button
+                        key={e.id}
+                        type="button"
+                        aria-pressed={on}
+                        className={`mood-emotion ${e.core ? 'core' : ''} ${on ? 'selected' : ''}`}
+                        style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
+                        onClick={() => onToggle(e.id)}
+                    >
+                        {e.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+class MoodLogForm extends Component {
+    constructor(props) {
+        super(props);
+        const l = props.editing;
+        const now = Date.now();
+        this.state = l ? {
+            kind: l.kind,
+            date: l.date,
+            datetime: toDateTimeLocal(l.kind === 'moment' ? l.ts : now),
+            happiness: l.happiness,
+            contentment: l.contentment,
+            energy: l.energy == null ? null : l.energy,
+            emotions: l.emotions || [],
+            note: l.note || '',
+            error: ''
+        } : {
+            kind: props.initialKind || 'moment',
+            date: dateKey(new Date()),
+            datetime: toDateTimeLocal(now),
+            happiness: null,
+            contentment: null,
+            energy: null,
+            emotions: [],
+            note: '',
+            error: ''
+        };
+    }
+
+    componentDidMount() {
+        // Opening "whole day" for a date that already has one should edit it, not duplicate it.
+        if (!this.props.editing && this.state.kind === 'day') this.checkExistingDay(this.state.date);
+    }
+
+    checkExistingDay(date) {
+        const existing = this.props.logs.find(l => l.kind === 'day' && l.date === date);
+        if (existing) this.props.onEdit(existing);
+    }
+
+    setKind = (kind) => {
+        if (this.props.editing) return;
+        this.setState({ kind, error: '' });
+        if (kind === 'day') this.checkExistingDay(this.state.date);
+    };
+
+    setDate = (date) => {
+        this.setState({ date });
+        if (!date) return;
+        const existing = this.props.logs.find(l => l.kind === 'day' && l.date === date);
+        if (existing && (!this.props.editing || existing.id !== this.props.editing.id)) {
+            this.props.onEdit(existing);
+        }
+    };
+
+    toggleEmotion = (id) => {
+        this.setState(s => ({
+            emotions: s.emotions.includes(id) ? s.emotions.filter(e => e !== id) : [...s.emotions, id]
+        }));
+    };
+
+    handleSubmit = (e) => {
+        e.preventDefault();
+        const s = this.state;
+        if (!s.happiness || !s.contentment) {
+            this.setState({ error: 'Happiness and contentment are required.' });
+            return;
+        }
+        if (countWords(s.note) > NOTE_WORD_LIMIT) {
+            this.setState({ error: `Notes are limited to ${NOTE_WORD_LIMIT} words.` });
+            return;
+        }
+        let ts, date;
+        if (s.kind === 'moment') {
+            const parsed = new Date(s.datetime);
+            if (!s.datetime || isNaN(parsed.getTime())) {
+                this.setState({ error: 'Please choose a valid time.' });
+                return;
+            }
+            ts = parsed.getTime();
+            date = dateKey(parsed);
+        } else {
+            if (!s.date) { this.setState({ error: 'Please choose a date.' }); return; }
+            date = s.date;
+            ts = parseDateKey(date).getTime() + 12 * 3600 * 1000;
+        }
+        const prev = this.props.editing;
+        const now = Date.now();
+        const log = {
+            id: prev ? prev.id : newId(),
+            kind: s.kind,
+            date,
+            ts,
+            happiness: s.happiness,
+            contentment: s.contentment,
+            energy: s.energy || null,
+            emotions: s.emotions,
+            note: s.note.trim(),
+            createdAt: prev ? prev.createdAt : now,
+            updatedAt: now
+        };
+        this.props.onSave(log);
+    };
+
+    render() {
+        const s = this.state;
+        const { editing } = this.props;
+        const words = countWords(s.note);
+        const over = words > NOTE_WORD_LIMIT;
+
+        return (
+            <form className="mood-form" onSubmit={this.handleSubmit}>
+                <div className="mood-seg mood-kind" role="tablist">
+                    <button type="button" role="tab" aria-selected={s.kind === 'moment'}
+                        className={s.kind === 'moment' ? 'active' : ''} disabled={!!editing && s.kind !== 'moment'}
+                        onClick={() => this.setKind('moment')}>Right now</button>
+                    <button type="button" role="tab" aria-selected={s.kind === 'day'}
+                        className={s.kind === 'day' ? 'active' : ''} disabled={!!editing && s.kind !== 'day'}
+                        onClick={() => this.setKind('day')}>Whole day</button>
+                </div>
+
+                <label className="mood-when">
+                    {s.kind === 'moment' ? 'Time' : 'Day'}
+                    {s.kind === 'moment' ? (
+                        <input type="datetime-local" value={s.datetime} onChange={(e) => this.setState({ datetime: e.target.value })} />
+                    ) : (
+                        <input type="date" value={s.date} onChange={(e) => this.setDate(e.target.value)} />
+                    )}
+                </label>
+
+                <ScaleInput metric={METRICS[0]} kind={s.kind} value={s.happiness} onChange={(v) => this.setState({ happiness: v, error: '' })} />
+                <ScaleInput metric={METRICS[1]} kind={s.kind} value={s.contentment} onChange={(v) => this.setState({ contentment: v, error: '' })} />
+
+                <fieldset className="mood-field">
+                    <legend>Emotions <span className="mood-opt">(optional, pick any)</span></legend>
+                    <div className="mood-prompt">{s.kind === 'moment' ? 'What best describes how you feel right now?' : 'What best describes how you felt today?'}</div>
+                    <CircumplexPicker selected={s.emotions} onToggle={this.toggleEmotion} />
+                </fieldset>
+
+                <ScaleInput metric={METRICS[2]} kind={s.kind} value={s.energy} onChange={(v) => this.setState({ energy: v })} />
+
+                <fieldset className="mood-field">
+                    <legend>Note <span className="mood-opt">(optional)</span></legend>
+                    <textarea
+                        className="mood-note"
+                        rows={3}
+                        value={s.note}
+                        placeholder={s.kind === 'moment' ? "What's going on?" : 'How did today go?'}
+                        onChange={(e) => this.setState({ note: e.target.value })}
+                    />
+                    <div className={`mood-wordcount ${over ? 'over' : ''}`}>{words}/{NOTE_WORD_LIMIT} words</div>
+                </fieldset>
+
+                {s.error && <div className="mood-error" role="alert">{s.error}</div>}
+
+                <div className="mood-form-actions">
+                    {editing && <button type="button" className="mood-btn" onClick={this.props.onCancel}>Cancel</button>}
+                    {editing && <button type="button" className="mood-btn danger" onClick={() => this.props.onDelete(editing)}>Delete</button>}
+                    <button type="submit" className="mood-btn primary" disabled={over}>{editing ? 'Update log' : 'Save log'}</button>
+                </div>
+            </form>
+        );
+    }
+}
+
+/* ======================================================================
+   Charts
+   ====================================================================== */
+
+function LineChart({ buckets, visible, emptyText }) {
+    const [hover, setHover] = useState(null);
+    const W = 760, H = 250, L = 30, R = 10, T = 12, B = 30;
+    const pw = W - L - R, ph = H - T - B;
+    const n = buckets.length;
+    const x = (i) => L + (i + 0.5) * (pw / n);
+    const y = (v) => T + (5 - v) / 4 * ph;
+    const step = n > 24 ? 5 : n > 12 ? 3 : 1;
+    const hasData = buckets.some(b => SERIES.some(s => b[s.id] != null));
+
+    // Solid segments join neighboring buckets; a dashed bridge spans buckets with no logs,
+    // so sparse data still reads as a trend without pretending the gap was measured.
+    const seriesPaths = SERIES.filter(s => visible[s.id]).map(s => {
+        const pts = [];
+        buckets.forEach((b, i) => { if (b[s.id] != null) pts.push({ i, x: x(i), y: y(b[s.id]) }); });
+        let solid = '', dashed = '';
+        for (let k = 1; k < pts.length; k++) {
+            const a = pts[k - 1], c = pts[k];
+            const seg = `M${a.x},${a.y} L${c.x},${c.y} `;
+            if (c.i - a.i === 1) solid += seg; else dashed += seg;
+        }
+        return { s, pts, solid, dashed };
+    });
+
+    const hb = hover != null ? buckets[hover] : null;
+
+    return (
+        <div className="mood-chart" onMouseLeave={() => setHover(null)}>
+            <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Mood over the selected range">
+                {[1, 2, 3, 4, 5].map(v => (
+                    <g key={v}>
+                        <line className="mood-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />
+                        <text className="mood-tick" x={L - 8} y={y(v)} textAnchor="end" dominantBaseline="middle">{v}</text>
+                    </g>
+                ))}
+                {buckets.map((b, i) => (i % step === 0 || (step > 1 && i === n - 1 && (n - 1) % step > step / 2)) && (
+                    <text key={b.key} className="mood-tick" x={x(i)} y={H - 10} textAnchor="middle">{b.short}</text>
+                ))}
+                {hb && <line className="mood-crosshair" x1={x(hover)} x2={x(hover)} y1={T} y2={T + ph} />}
+                {seriesPaths.map(({ s, pts, solid, dashed }) => (
+                    <g key={s.id} className={`mood-series-${s.id}`}>
+                        {dashed && <path className="mood-line bridge" d={dashed} />}
+                        {solid && <path className="mood-line" d={solid} />}
+                        {pts.map(pt => (
+                            <circle key={pt.i} className="mood-dot" cx={pt.x} cy={pt.y} r={hover === pt.i ? 6 : 4} />
+                        ))}
+                    </g>
+                ))}
+                {buckets.map((b, i) => (
+                    <rect key={b.key} className="mood-hit" x={L + i * pw / n} y={T} width={pw / n} height={ph}
+                        onMouseEnter={() => setHover(i)} />
+                ))}
+            </svg>
+            {!hasData && <div className="mood-empty-overlay">{emptyText}</div>}
+            {hb && (
+                <div className={`mood-tooltip ${hover > n / 2 ? 'left' : ''}`} style={{ left: `${x(hover) / W * 100}%` }}>
+                    <div className="mood-tooltip-title">{hb.label}</div>
+                    {SERIES.filter(s => visible[s.id]).map(s => (
+                        <div key={s.id} className="mood-tooltip-row">
+                            <span className={`mood-swatch mood-bg-${s.id}`} />{s.label}<b>{fmt(hb[s.id])}</b>
+                        </div>
+                    ))}
+                    <div className="mood-tooltip-foot">
+                        {hb.n ? `${hb.n} log${hb.n === 1 ? '' : 's'}${hb.days ? ` over ${hb.days} day${hb.days === 1 ? '' : 's'}` : ''}` : 'No logs'}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function DataTable({ buckets, firstCol }) {
+    const rows = buckets.filter(b => b.n);
+    return (
+        <details className="mood-table-wrap">
+            <summary>Table view</summary>
+            {rows.length === 0 ? <p className="mood-muted">Nothing logged in this range.</p> : (
+                <table className="mood-table">
+                    <thead><tr><th>{firstCol}</th>{SERIES.map(s => <th key={s.id}>{s.label}</th>)}<th>Logs</th></tr></thead>
+                    <tbody>{rows.map(b => (
+                        <tr key={b.key}><td>{b.label}</td>{SERIES.map(s => <td key={s.id}>{fmt(b[s.id])}</td>)}<td>{b.n}</td></tr>
+                    ))}</tbody>
+                </table>
+            )}
+        </details>
+    );
+}
+
+function YearHeatmap({ logs, year, source, metric, onPick }) {
+    const [hover, setHover] = useState(null);
+    const start = new Date(year, 0, 1), end = new Date(year, 11, 31);
+    const daily = dailyValues(logsInRange(logs, dateKey(start), dateKey(end)), source);
+    const gridStart = addDays(start, -((start.getDay() + 6) % 7));
+    const C = 13, G = 3, LEFT = 30, TOP = 18;
+    const cells = [];
+    const monthCols = [];
+    for (let d = gridStart, i = 0; d <= end; d = addDays(d, 1), i++) {
+        const col = Math.floor(i / 7), row = i % 7;
+        if (d < start) continue;
+        if (d.getDate() === 1) monthCols.push({ m: d.getMonth(), col });
+        const k = dateKey(d);
+        const v = daily.get(k);
+        const val = v ? v[metric] : null;
+        cells.push({ k, d, col, row, val, n: v ? v.logCount : 0 });
+    }
+    const cols = Math.max(...cells.map(c => c.col)) + 1;
+    const W = LEFT + cols * (C + G), H = TOP + 7 * (C + G);
+    const hc = hover != null ? cells[hover] : null;
+    const label = SERIES.find(s => s.id === metric).label;
+
+    return (
+        <div className="mood-heatmap" onMouseLeave={() => setHover(null)}>
+            <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${label} by day in ${year}`}>
+                {monthCols.map(({ m, col }) => (
+                    <text key={m} className="mood-tick" x={LEFT + col * (C + G)} y={11}>{MONTHS[m]}</text>
+                ))}
+                {['Mon', '', 'Wed', '', 'Fri', '', ''].map((t, r) => t && (
+                    <text key={r} className="mood-tick" x={LEFT - 6} y={TOP + r * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{t}</text>
+                ))}
+                {cells.map((c, i) => (
+                    <rect
+                        key={c.k}
+                        x={LEFT + c.col * (C + G)} y={TOP + c.row * (C + G)} width={C} height={C} rx={3}
+                        className={`mood-cell ${c.val == null ? 'empty' : `lvl-${Math.min(5, Math.max(1, Math.round(c.val)))}`} ${hover === i ? 'hover' : ''}`}
+                        onMouseEnter={() => setHover(i)}
+                        onClick={() => onPick(c.d)}
+                    />
+                ))}
+            </svg>
+            {hc && (
+                <div className={`mood-tooltip ${hc.col > cols / 2 ? 'left' : ''}`}
+                    style={{ left: `${(LEFT + hc.col * (C + G) + C / 2) / W * 100}%`, top: `${(TOP + hc.row * (C + G) + C + 6) / H * 100}%` }}>
+                    <div className="mood-tooltip-title">{hc.d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                    <div className="mood-tooltip-row">{label}<b>{fmt(hc.val)}</b></div>
+                    <div className="mood-tooltip-foot">{hc.n ? `${hc.n} log${hc.n === 1 ? '' : 's'} · click to open day` : 'No logs'}</div>
+                </div>
+            )}
+            <div className="mood-heat-legend">
+                <span>1</span>
+                {[1, 2, 3, 4, 5].map(l => <span key={l} className={`mood-cell-swatch lvl-${l}`} />)}
+                <span>5</span>
+                <span className="mood-cell-swatch empty" style={{ marginLeft: '0.12rem' }} /><span>no log</span>
+            </div>
+        </div>
+    );
+}
+
+function describeAffect(c) {
+    if (!c) return '';
+    const mag = Math.hypot(c.valence, c.arousal);
+    if (mag < 0.2) return 'Mixed — no strong lean';
+    const v = c.valence > 0.15 ? 'pleasant' : c.valence < -0.15 ? 'unpleasant' : '';
+    const a = c.arousal > 0.15 ? 'activated' : c.arousal < -0.15 ? 'low-energy' : '';
+    return `Leaning ${[v, a].filter(Boolean).join(' & ') || 'neutral'}`;
+}
+
+function EmotionSummary({ stats }) {
+    const max = stats.ranked.length ? stats.ranked[0].count : 1;
+    const R = 38;
+    return (
+        <div className="mood-emotions">
+            <div className="mood-emotion-map">
+                <div className="mood-circle" />
+                <div className="mood-axis mood-axis-v" />
+                <div className="mood-axis mood-axis-h" />
+                <span className="mood-axis-label" style={{ left: '50%', top: '7%' }}>activation</span>
+                <span className="mood-axis-label" style={{ left: '50%', top: '93%' }}>deactivation</span>
+                <span className="mood-axis-label" style={{ left: '93%', top: '50%' }}>pleasant</span>
+                <span className="mood-axis-label" style={{ left: '7%', top: '50%' }}>unpleasant</span>
+                {stats.ranked.map(e => {
+                    const pos = circlePos(e, R);
+                    const size = 0.08 + 0.16 * Math.sqrt(e.count / max);
+                    return (
+                        <span key={e.id} className="mood-emotion-dot" title={`${e.label}: ${e.count}`}
+                            style={{ left: `${pos.left}%`, top: `${pos.top}%`, width: `${size}rem`, height: `${size}rem` }} />
+                    );
+                })}
+                {stats.center && (
+                    <span className="mood-affect-center" title="Average position of selected emotions"
+                        style={{ left: `${50 + stats.center.valence * R}%`, top: `${50 - stats.center.arousal * R}%` }} />
+                )}
+            </div>
+            <div className="mood-emotion-list">
+                {stats.ranked.length === 0 ? <p className="mood-muted">No emotions tagged in this range.</p> : (
+                    <>
+                        <p className="mood-affect-text">{describeAffect(stats.center)}</p>
+                        {stats.ranked.slice(0, 8).map(e => (
+                            <div key={e.id} className="mood-bar-row">
+                                <span className="mood-bar-label">{e.label}</span>
+                                <span className="mood-bar-track"><span className="mood-bar" style={{ width: `${e.count / max * 100}%` }} /></span>
+                                <span className="mood-bar-value">{e.count}</span>
+                            </div>
+                        ))}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function StatTile({ label, value, suffix, delta, sub }) {
+    return (
+        <div className="mood-tile">
+            <div className="mood-tile-label">{label}</div>
+            <div className="mood-tile-value">{value}{suffix && <span className="mood-tile-suffix">{suffix}</span>}</div>
+            {delta != null && !isNaN(delta) && (
+                <div className={`mood-tile-delta ${delta > 0.05 ? 'up' : delta < -0.05 ? 'down' : ''}`}>
+                    {delta > 0.05 ? '▲' : delta < -0.05 ? '▼' : '■'} {Math.abs(delta).toFixed(1)} vs previous
+                </div>
+            )}
+            {sub && <div className="mood-tile-sub">{sub}</div>}
+        </div>
+    );
+}
+
+function LogList({ logs, onEdit, onDelete }) {
+    const [limit, setLimit] = useState(20);
+    const sorted = [...logs].sort((a, b) => b.ts - a.ts);
+    if (!sorted.length) return <p className="mood-muted">No logs in this range.</p>;
+    return (
+        <div className="mood-loglist">
+            {sorted.slice(0, limit).map(l => {
+                const d = new Date(l.ts);
+                return (
+                    <div key={l.id} className="mood-logitem">
+                        <div className="mood-logitem-head">
+                            <span className={`mood-kind-badge ${l.kind}`}>{l.kind === 'day' ? 'Whole day' : 'Ad hoc'}</span>
+                            <span className="mood-logitem-when">
+                                {parseDateKey(l.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                {l.kind === 'moment' && ` · ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`}
+                            </span>
+                            <span className="mood-logitem-actions">
+                                <button type="button" onClick={() => onEdit(l)}>Edit</button>
+                                <button type="button" onClick={() => onDelete(l)}>Delete</button>
+                            </span>
+                        </div>
+                        <div className="mood-logitem-values">
+                            {SERIES.map(s => (
+                                <span key={s.id}><span className={`mood-swatch mood-bg-${s.id}`} />{s.label} <b>{l[s.id] == null ? '–' : l[s.id]}</b></span>
+                            ))}
+                        </div>
+                        {l.emotions && l.emotions.length > 0 && (
+                            <div className="mood-chips">{l.emotions.map(id => <span key={id} className="mood-chip">{EMOTION_BY_ID[id] ? EMOTION_BY_ID[id].label : id}</span>)}</div>
+                        )}
+                        {l.note && <div className="mood-logitem-note">{l.note}</div>}
+                    </div>
+                );
+            })}
+            {sorted.length > limit && (
+                <button type="button" className="mood-btn" onClick={() => setLimit(limit + 20)}>Show more ({sorted.length - limit} left)</button>
+            )}
+        </div>
+    );
+}
+
+/* ======================================================================
+   Page
+   ====================================================================== */
+
+const PERIODS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
+const CYCLES = [['hour', 'Hour of day'], ['weekday', 'Day of week'], ['monthday', 'Day of month'], ['month', 'Month of year']];
+const LOOKBACKS = [['30', 'Last 30 days'], ['90', 'Last 90 days'], ['365', 'Last year'], ['all', 'All time']];
+const SOURCES = [['blended', 'All logs'], ['day', 'Whole-day logs'], ['moment', 'Ad hoc logs']];
+
+function Seg({ options, value, onChange, label }) {
+    return (
+        <div className="mood-seg" role="tablist" aria-label={label}>
+            {options.map(([v, l]) => (
+                <button key={v} type="button" role="tab" aria-selected={value === v}
+                    className={value === v ? 'active' : ''} onClick={() => onChange(v)}>{l}</button>
+            ))}
+        </div>
+    );
+}
+
+export default class MoodTracker extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            logs: loadLogs(),
+            editing: null,
+            formKey: 0,
+            formKind: 'moment',
+            flash: '',
+            mode: 'history',
+            period: 'week',
+            cycle: 'weekday',
+            lookback: 'all',
+            source: 'blended',
+            anchor: new Date(),
+            heatMetric: 'happiness',
+            visible: { happiness: true, contentment: true, energy: true }
+        };
+        this.formRef = React.createRef();
+    }
+
+    componentDidMount() {
+        window.addEventListener(MOOD_EVENT, this.handleExternalUpdate);
+        window.addEventListener('storage', this.handleStorage);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener(MOOD_EVENT, this.handleExternalUpdate);
+        window.removeEventListener('storage', this.handleStorage);
+        clearTimeout(this.flashTimer);
+    }
+
+    // Cloud sync or another tab changed the stored logs.
+    handleExternalUpdate = (e) => {
+        if (!e.detail || !e.detail.keys || e.detail.keys.includes(MOOD_KEY)) this.setState({ logs: loadLogs() });
+    };
+    handleStorage = (e) => { if (e.key === MOOD_KEY) this.setState({ logs: loadLogs() }); };
+
+    persist(logs, flash) {
+        saveLogs(logs);
+        this.setState({ logs, editing: null, formKey: this.state.formKey + 1, flash });
+        clearTimeout(this.flashTimer);
+        this.flashTimer = setTimeout(() => this.setState({ flash: '' }), 2500);
+    }
+
+    handleSave = (log) => {
+        const editing = !!this.state.editing;
+        this.setState({ formKind: 'moment' });
+        this.persist(upsertLog(this.state.logs, log), editing ? 'Log updated.' : 'Logged. Thanks for checking in!');
+    };
+
+    handleDelete = (log) => {
+        if (!window.confirm('Delete this mood log?')) return;
+        this.persist(this.state.logs.filter(l => l.id !== log.id), 'Log deleted.');
+    };
+
+    handleEdit = (log) => {
+        this.setState({ editing: log, formKind: log.kind, formKey: this.state.formKey + 1 });
+        if (this.formRef.current && this.formRef.current.scrollIntoView) {
+            this.formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    handleCancel = () => this.setState({ editing: null, formKey: this.state.formKey + 1 });
+
+    toggleSeries = (id) => this.setState(s => {
+        const visible = { ...s.visible, [id]: !s.visible[id] };
+        return Object.values(visible).some(Boolean) ? { visible } : null;
+    });
+
+    pickDay = (d) => this.setState({ mode: 'history', period: 'day', anchor: d });
+
+    renderDashboard() {
+        const { logs, mode, period, cycle, lookback, source, anchor, visible, heatMetric } = this.state;
+        const today = new Date();
+        let buckets, rangeLogs, summary, prevSummary = null, title, firstCol, emptyText;
+
+        if (mode === 'history') {
+            const { start, end } = periodRange(period, anchor);
+            rangeLogs = logsInRange(logs, dateKey(start), dateKey(end));
+            buckets = historicalBuckets(logs, period, anchor, source);
+            const perMoment = period === 'day';
+            summary = summarize(rangeLogs, source, perMoment);
+            const prev = periodRange(period, shiftAnchor(period, anchor, -1));
+            prevSummary = summarize(logsInRange(logs, dateKey(prev.start), dateKey(prev.end)), source, perMoment);
+            title = periodTitle(period, anchor);
+            firstCol = period === 'day' ? 'Hour' : period === 'year' ? 'Month' : 'Day';
+            emptyText = period === 'day'
+                ? (source === 'day' ? 'Hourly view uses ad hoc logs only.' : 'No ad hoc logs on this day.')
+                : 'No logs in this range yet.';
+        } else {
+            const startKey = lookback === 'all' ? '0000-01-01' : dateKey(addDays(today, -Number(lookback) + 1));
+            const endKey = dateKey(today);
+            rangeLogs = logsInRange(logs, startKey, endKey);
+            buckets = cycleBuckets(logs, cycle, startKey, endKey, source);
+            summary = summarize(rangeLogs, source, cycle === 'hour');
+            title = `Typical ${CYCLES.find(c => c[0] === cycle)[1].toLowerCase()} · ${LOOKBACKS.find(l => l[0] === lookback)[1].toLowerCase()}`;
+            firstCol = CYCLES.find(c => c[0] === cycle)[1];
+            emptyText = cycle === 'hour'
+                ? (source === 'day' ? 'Hour-of-day cycles use ad hoc logs only.' : 'Log moods throughout the day to see your daily rhythm.')
+                : 'Not enough logs yet to show a cycle.';
+        }
+
+        const delta = (k) => (prevSummary && summary[k] != null && prevSummary[k] != null ? summary[k] - prevSummary[k] : null);
+        const stats = emotionStats(rangeLogs, source);
+        const heatYear = (mode === 'history' ? anchor : today).getFullYear();
+        const dayLog = mode === 'history' && period === 'day' ? rangeLogs.find(l => l.kind === 'day') : null;
+
+        return (
+            <div className="mood-dashboard">
+                <div className="mood-controls">
+                    <Seg label="View" options={[['history', 'Over time'], ['cycle', 'Typical cycle']]} value={mode} onChange={(v) => this.setState({ mode: v })} />
+                    {mode === 'history'
+                        ? <Seg label="Period" options={PERIODS} value={period} onChange={(v) => this.setState({ period: v })} />
+                        : <Seg label="Cycle" options={CYCLES} value={cycle} onChange={(v) => this.setState({ cycle: v })} />}
+                    <select className="mood-select" aria-label="Which logs to include" value={source} onChange={(e) => this.setState({ source: e.target.value })}>
+                        {SOURCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                    {mode === 'cycle' && (
+                        <select className="mood-select" aria-label="Time window" value={lookback} onChange={(e) => this.setState({ lookback: e.target.value })}>
+                            {LOOKBACKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                    )}
+                </div>
+
+                <div className="mood-range-title">
+                    {mode === 'history' && <button type="button" className="mood-nav" aria-label="Previous" onClick={() => this.setState({ anchor: shiftAnchor(period, anchor, -1) })}>‹</button>}
+                    <span>{title}</span>
+                    {mode === 'history' && <button type="button" className="mood-nav" aria-label="Next" onClick={() => this.setState({ anchor: shiftAnchor(period, anchor, 1) })}>›</button>}
+                    {mode === 'history' && dateKey(periodRange(period, anchor).start) !== dateKey(periodRange(period, today).start) && (
+                        <button type="button" className="mood-btn small" onClick={() => this.setState({ anchor: new Date() })}>Today</button>
+                    )}
+                </div>
+
+                <div className="mood-tiles">
+                    <StatTile label="Happiness" value={fmt(summary.happiness)} suffix="/5" delta={delta('happiness')} />
+                    <StatTile label="Contentment" value={fmt(summary.contentment)} suffix="/5" delta={delta('contentment')} />
+                    <StatTile label="Energy" value={fmt(summary.energy)} suffix="/5" delta={delta('energy')} />
+                    <StatTile label="Logs" value={summary.logs || 0}
+                        sub={summary.days != null ? `${summary.days} day${summary.days === 1 ? '' : 's'} logged` : null} />
+                    <StatTile label="Streak" value={currentStreak(logs)} suffix=" days" sub="consecutive days logged" />
+                </div>
+
+                <section className="mood-card">
+                    <div className="mood-card-head">
+                        <h3>{mode === 'history' ? (period === 'day' ? 'Through the day' : 'Over time') : 'Average by ' + firstCol.toLowerCase()}</h3>
+                        <div className="mood-legend">
+                            {SERIES.map(s => (
+                                <button key={s.id} type="button" aria-pressed={visible[s.id]}
+                                    className={`mood-legend-item ${visible[s.id] ? '' : 'off'}`} onClick={() => this.toggleSeries(s.id)}>
+                                    <span className={`mood-swatch mood-bg-${s.id}`} />{s.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <LineChart buckets={buckets} visible={visible} emptyText={emptyText} />
+                    {dayLog && (
+                        <p className="mood-muted mood-daylog-note">
+                            Whole-day log: happiness {dayLog.happiness}, contentment {dayLog.contentment}{dayLog.energy ? `, energy ${dayLog.energy}` : ''}.
+                        </p>
+                    )}
+                    <DataTable buckets={buckets} firstCol={firstCol} />
+                </section>
+
+                <section className="mood-card">
+                        <div className="mood-card-head">
+                            <h3>Year in pixels <span className="mood-h3-sub">{heatYear}</span></h3>
+                            <select className="mood-select" aria-label="Heatmap metric" value={heatMetric} onChange={(e) => this.setState({ heatMetric: e.target.value })}>
+                                {SERIES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                            </select>
+                        </div>
+                        <YearHeatmap logs={logs} year={heatYear} source={source} metric={heatMetric} onPick={this.pickDay} />
+                </section>
+
+                <section className="mood-card">
+                    <div className="mood-card-head"><h3>Emotions</h3></div>
+                    <EmotionSummary stats={stats} />
+                </section>
+
+                <section className="mood-card">
+                    <div className="mood-card-head"><h3>Logs</h3></div>
+                    <LogList logs={rangeLogs.filter(l => source === 'blended' || l.kind === source)} onEdit={this.handleEdit} onDelete={this.handleDelete} />
+                </section>
+            </div>
+        );
+    }
+
+    render() {
+        const { editing, formKey, formKind, logs, flash } = this.state;
+        return (
+            <div className="mood-page">
+                <div className="mood-log-card" ref={this.formRef}>
+                    <h2 style={{ backgroundColor: 'var(--highlighter2)' }}>{editing ? 'Edit log' : 'Mood check-in'}</h2>
+                    {flash && <div className="mood-flash" role="status">{flash}</div>}
+                    <MoodLogForm
+                        key={formKey}
+                        logs={logs}
+                        editing={editing}
+                        initialKind={formKind}
+                        onSave={this.handleSave}
+                        onEdit={this.handleEdit}
+                        onCancel={this.handleCancel}
+                        onDelete={this.handleDelete}
+                    />
+                </div>
+                {this.renderDashboard()}
+            </div>
+        );
+    }
+}
+

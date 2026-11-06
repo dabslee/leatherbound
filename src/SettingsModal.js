@@ -155,7 +155,7 @@ export default class SettingsModal extends Component {
                     });
                     // Initialize timestamps if missing
                     let timestamps = {};
-                    const names = ["schedule", "todo", "notes", "diary", "leatherbound-settings"];
+                    const names = ["schedule", "todo", "notes", "diary", "mood", "leatherbound-settings"];
                     names.forEach(name => {
                         if (localStorage.getItem(name)) {
                             timestamps[name] = Date.now();
@@ -604,6 +604,21 @@ export default class SettingsModal extends Component {
                         placeholder="Notes"
                     />
                 </div>
+                <h3 style={{marginTop: '0.25rem', marginBottom: '0.05rem', fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>Pages</h3>
+                <label style={{display: 'flex', alignItems: 'flex-start', gap: '0.1rem', cursor: 'pointer'}}>
+                    <input
+                        type="checkbox"
+                        checked={!!settings.moodTrackerEnabled}
+                        onChange={(e) => this.updateSetting('moodTrackerEnabled', e.target.checked)}
+                        style={{marginTop: '0.05rem', width: '0.16rem', height: '0.16rem'}}
+                    />
+                    <span>
+                        Mood tracker
+                        <span style={{display: 'block', fontSize: '0.15rem', opacity: 0.7, fontWeight: 'normal'}}>
+                            Adds a page after the diary for logging your mood and viewing trends over time.
+                        </span>
+                    </span>
+                </label>
             </div>
         );
     }

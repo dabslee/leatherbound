@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import RichTextEditor from "./RichTextEditor";
+import MoodTracker from "./MoodTracker";
 
 /* Weather */
 export const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
@@ -47,6 +48,10 @@ class App extends Component {
   }
 
   componentDidUpdate(prevProps) {
+    // If the mood tracker is switched off while it's open, fall back to the diary.
+    if (!this.props.settings.moodTrackerEnabled && this.state.page === "mood") {
+      this.setState({page: "diary"});
+    }
     if (prevProps.settings.weatherLocation !== this.props.settings.weatherLocation) {
       this.weatherUpdate(this.props.settings.weatherLocation);
     }
@@ -221,6 +226,13 @@ class App extends Component {
           <div id="todiary" className="navigator" onClick={() => this.setState({page: "diary"})}>&#12297;</div>
         </div>
       );
+    } else if (this.state.page === "mood" && settings.moodTrackerEnabled) {
+      return (
+        <div id="content-container">
+          <div id="todiary" className="navigator" onClick={() => this.setState({page: "diary"})}>&#12296;</div>
+          <MoodTracker />
+        </div>
+      );
     } else {
       var diary = localStorage.getItem("diary");
       return (
@@ -231,6 +243,9 @@ class App extends Component {
                   <RichTextEditor id="diary-area" className="rich-text-area" style={{width:"100%", height:"100%"}} defaultValue={diary} />
               </div>
           </div>
+          {settings.moodTrackerEnabled && (
+            <div id="tomood" className="navigator" title="Mood tracker" onClick={() => this.setState({page: "mood"})}>&#12297;</div>
+          )}
         </div>
       )
     }
