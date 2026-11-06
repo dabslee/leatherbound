@@ -206,3 +206,144 @@
     .api-token-form select, .api-token-form button { flex: 0 0 auto; }
 }
 [data-theme="dark"] .api-token-form select option { background-color: #222; color: var(--text-color); }
+
+/* Scratchpad / mood tracker page toggles */
+.setting-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.1rem;
+    cursor: pointer;
+    margin-bottom: 0.15rem;
+}
+.setting-check input {
+    margin: 0.05rem 0 0;
+    width: 0.16rem;
+    height: 0.16rem;
+    min-width: 0.16rem;
+    flex: 0 0 0.16rem;
+}
+
+/* Phones: modals become full-screen sheets. Same query as main.css. */
+@media (max-width: 768px), (max-height: 500px) and (max-width: 1000px) {
+    /* Don't let the page scroll behind an open modal. */
+    body:has(.settings-modal-overlay) {
+        overflow: hidden;
+    }
+
+    .settings-modal-overlay {
+        align-items: stretch;
+        backdrop-filter: none;
+    }
+
+    .settings-modal-content {
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: max(8px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+        font-size: 15px;
+    }
+
+    .settings-modal-header {
+        margin-bottom: 4px;
+    }
+
+    .settings-modal-header h2 {
+        font-size: 26px;
+    }
+
+    .settings-close-btn {
+        width: 44px;
+        height: 44px;
+        margin-right: -10px;
+        font-size: 20px;
+    }
+
+    .modal-tabs {
+        margin-bottom: 14px;
+        flex-shrink: 0;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-height: 44px;
+        padding: 0 2px;
+        font-size: 15px;
+        white-space: nowrap;
+    }
+
+    /* The desktop highlighter color is transparent in the dark theme. */
+    .tab-btn.active {
+        border-bottom-color: var(--text-color);
+    }
+
+    .settings-tab-content {
+        padding-right: 0;
+        overscroll-behavior: contain;
+    }
+
+    .setting-row label {
+        font-size: 15px;
+        margin-bottom: 4px;
+    }
+
+    /* 16px is the floor: iOS Safari zooms the page when a smaller field gets focus. */
+    .setting-row input[type="text"],
+    .setting-row input[type="password"],
+    .setting-row select {
+        min-width: 0;
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 16px;
+        border-radius: 6px;
+    }
+
+    .setting-check {
+        gap: 12px;
+        min-height: 44px;
+    }
+
+    .setting-check input {
+        margin: 2px 0 0;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        flex: 0 0 20px;
+    }
+
+    .link-edit-row {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .link-edit-row .setting-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .link-edit-row h4 {
+        margin-bottom: 0;
+        font-size: 17px;
+    }
+
+    .clear-link-btn {
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+
+    .icon-preview {
+        width: 40px;
+        height: 40px;
+        margin-left: 10px;
+    }
+
+    .api-token-form input, .api-token-form select, .api-token-form button {
+        min-height: 44px;
+        min-width: 0;
+    }
+}

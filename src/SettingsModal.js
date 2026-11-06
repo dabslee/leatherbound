@@ -436,7 +436,7 @@ export default class SettingsModal extends Component {
                 <p style={{fontSize: '0.18rem', marginBottom: '0.15rem'}}>
                      Manually export or import your data as a file.
                 </p>
-                <div style={{display: 'flex', gap: '10px'}}>
+                <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
                     <button
                         onClick={this.exportData}
                         style={{
@@ -564,8 +564,8 @@ export default class SettingsModal extends Component {
                                             this.state.weatherStatus === 'valid' ? 'green' : '#ccc'
                             }}
                         />
-                        {this.state.weatherStatus === 'validating' && <span style={{fontSize: '0.8rem', color: 'gray'}}>Validating...</span>}
-                        {this.state.weatherStatus === 'invalid' && <span style={{fontSize: '0.8rem', color: 'red'}}>{this.state.weatherError}</span>}
+                        {this.state.weatherStatus === 'validating' && <span style={{fontSize: '0.16rem', color: 'gray'}}>Validating...</span>}
+                        {this.state.weatherStatus === 'invalid' && <span style={{fontSize: '0.16rem', color: 'red'}}>{this.state.weatherError}</span>}
                     </div>
                 </div>
             </div>
@@ -606,12 +606,11 @@ export default class SettingsModal extends Component {
                 <div className="setting-row" style={{marginBottom: 0}}>
                     <label>Pages</label>
                 </div>
-                <label style={{display: 'flex', alignItems: 'flex-start', gap: '0.1rem', cursor: 'pointer', marginBottom: '0.15rem'}}>
+                <label className="setting-check">
                     <input
                         type="checkbox"
                         checked={settings.diaryEnabled !== false}
                         onChange={(e) => this.updateSetting('diaryEnabled', e.target.checked)}
-                        style={{marginTop: '0.05rem', marginLeft: 0, marginRight: 0, width: '0.16rem', height: '0.16rem', minWidth: '0.16rem', flex: '0 0 0.16rem'}}
                     />
                     <span>
                         Scratchpad
@@ -620,12 +619,11 @@ export default class SettingsModal extends Component {
                         </span>
                     </span>
                 </label>
-                <label style={{display: 'flex', alignItems: 'flex-start', gap: '0.1rem', cursor: 'pointer'}}>
+                <label className="setting-check">
                     <input
                         type="checkbox"
                         checked={!!settings.moodTrackerEnabled}
                         onChange={(e) => this.updateSetting('moodTrackerEnabled', e.target.checked)}
-                        style={{marginTop: '0.05rem', marginLeft: 0, marginRight: 0, width: '0.16rem', height: '0.16rem', minWidth: '0.16rem', flex: '0 0 0.16rem'}}
                     />
                     <span>
                         Mood tracker

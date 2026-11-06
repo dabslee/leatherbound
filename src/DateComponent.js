@@ -60,7 +60,7 @@ class DateComponent extends Component {
     // `substr` handles length > string length gracefully.
 
     return (
-      <div style={{display:"flex", flexDirection:"column"}}>
+      <div className="date-block">
         <h1 id="date">{datestr}</h1>
         <div className="sh" id="time">{timestr}</div>
       </div>

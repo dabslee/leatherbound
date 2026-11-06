@@ -401,21 +401,9 @@ function Root({ initialSettings, hadSavedSettings }) {
         <React.StrictMode>
             <div id="header-container">
                 <DateComponent/>
-                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end'}}>
+                <div className="header-meta">
                     <div id="logo">&sect; leatherbound</div>
-                    <button
-                        onClick={() => openSettings()}
-                        style={{
-                            marginTop: '0.05rem',
-                            background: 'transparent',
-                            border: '0.01rem solid rgba(128,128,128,0.4)',
-                            color: 'rgba(128,128,128,0.4)',
-                            borderRadius: '0.04rem',
-                            cursor: 'pointer',
-                            fontSize: '0.128rem',
-                            padding: '0.02rem 0.08rem'
-                        }}
-                    >
+                    <button className="configure-btn" onClick={() => openSettings()}>
                         🛠 Configure
                     </button>
                 </div>
@@ -501,6 +489,9 @@ ReactDOM.render(
     // Flush edits to localStorage as the user types/pastes and when the page is being
     // hidden or closed. Note: 'unload' is blocked by Chrome's permissions policy, so use
     // 'pagehide' and 'visibilitychange' (hidden) instead to persist on leave.
+    // 'input' is what catches phone keyboards: autocorrect, swipe typing and dictation change
+    // the text without a usable keydown, and keydown itself fires before the character lands.
+    window.addEventListener('input', saveAreas);
     window.addEventListener('keydown', saveAreas);
     window.addEventListener('paste', saveAreas);
     window.addEventListener('pagehide', saveAreas);

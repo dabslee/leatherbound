@@ -137,7 +137,47 @@ class App extends Component {
       .catch(e => console.error(e));
   }
 
+  goTo = (page) => {
+    this.setState({page});
+    window.scrollTo(0, 0);
+  }
+
+  // Bottom tab bar, shown only at phone widths (see .mobile-nav in main.css). Replaces the
+  // side chevrons there, which end up stacked above and below a very long page.
+  renderMobileNav() {
+    const { settings } = this.props;
+    const pages = [{id: "home", label: "Home", icon: "bi-house"}];
+    if (settings.diaryEnabled !== false) pages.push({id: "diary", label: "Scratchpad", icon: "bi-journal-text"});
+    if (settings.moodTrackerEnabled) pages.push({id: "mood", label: "Mood", icon: "bi-emoji-smile"});
+    if (pages.length < 2) return null;
+    return (
+      <nav className="mobile-nav" aria-label="Pages">
+        {pages.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            className={this.state.page === p.id ? "active" : ""}
+            aria-current={this.state.page === p.id ? "page" : undefined}
+            onClick={() => this.goTo(p.id)}
+          >
+            <i className={`bi ${p.icon}`} aria-hidden="true" />
+            <span>{p.label}</span>
+          </button>
+        ))}
+      </nav>
+    );
+  }
+
   render() {
+    return (
+      <>
+        {this.renderPage()}
+        {this.renderMobileNav()}
+      </>
+    );
+  }
+
+  renderPage() {
     const { settings } = this.props;
     const { weatherData } = this.state;
     const today = weatherData.today || {};
@@ -162,13 +202,13 @@ class App extends Component {
                           settings.quickLinks.map((link, i) => (
                               link.url && link.title && (
                                 <a key={i} href={link.url} className="link-icon">
-                                    <img class="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} style={{width:"0.9rem"}} alt={link.title}/>
+                                    <img className="drawn-icon" src={`https://img.icons8.com/plasticine/400/000000/${link.icon}.png`} alt={link.title}/>
                                     <figcaption>{link.title}</figcaption>
                                 </a>
                               )
                           ))
                       ) : (
-                          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', color: 'var(--text-color)'}}>
+                          <div className="quicklinks-empty" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', color: 'var(--text-color)'}}>
                               <p>No quick links configured.</p>
                               <button
                                   onClick={this.props.openSettings}
@@ -204,7 +244,7 @@ class App extends Component {
               <div id="weather" className="app-double">
                   <h2 style={{backgroundColor: "var(--highlighter5)"}}>Weather ({settings.weatherLocation})</h2>
                   <div className="weather-content">
-                      <div style={{width:"4rem", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.16rem"}}>
+                      <div className="weather-day">
                           <p>
                               <b>- TODAY -</b><br/>
                               <span>{today.description}</span><br/>
@@ -213,9 +253,9 @@ class App extends Component {
                               Low: <span>{today.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{today.precipitation}</span>%
                           </p>
-                          {today.icon && <img class="drawn-icon" src={today.icon} style={{height:"1rem"}} alt="weather-today"/>}
+                          {today.icon && <img className="drawn-icon" src={today.icon} alt="weather-today"/>}
                       </div>
-                      <div style={{width:"4rem", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.16rem"}}>
+                      <div className="weather-day">
                           <p>
                               <b>- TOMORROW -</b><br/>
                               <span>{tomorrow.description}</span><br/>
@@ -224,7 +264,7 @@ class App extends Component {
                               Low: <span>{tomorrow.lowTemp}</span> &deg;F<br/>
                               Precipitation: <span>{tomorrow.precipitation}</span>%
                           </p>
-                          {tomorrow.icon && <img class="drawn-icon" src={tomorrow.icon} style={{height:"1rem"}} alt="weather-tomorrow"/>}
+                          {tomorrow.icon && <img className="drawn-icon" src={tomorrow.icon} alt="weather-tomorrow"/>}
                       </div>
                   </div>
               </div>
@@ -249,7 +289,7 @@ class App extends Component {
         <div id="content-container">
           <div id="tohome" className="navigator" onClick={() => this.setState({page: "home"})}>&#12296;</div>
           <div className="app-container">
-              <div className="app" style={{width: "80vw", height: "65vh"}}>
+              <div className="app diary-page">
                   <RichTextEditor id="diary-area" className="rich-text-area" style={{width:"100%", height:"100%"}} defaultValue={diary} />
               </div>
           </div>

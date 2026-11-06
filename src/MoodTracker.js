@@ -16,6 +16,9 @@ const SERIES = [
 
 const fmt = (v) => (v == null ? '–' : v.toFixed(1));
 
+// Same query as the phone layout in main.css and mood.css.
+const MOBILE_QUERY = '(max-width: 768px), (max-height: 500px) and (max-width: 1000px)';
+
 /* ======================================================================
    Logging form
    ====================================================================== */
@@ -288,6 +291,13 @@ function LineChart({ buckets, visible, emptyText }) {
 
     const hb = hover != null ? buckets[hover] : null;
 
+    // A tap opens the tooltip but never fires mouseleave, so close it on the next outside touch.
+    useEffect(() => {
+        const onTouch = (e) => { if (ref.current && !ref.current.contains(e.target)) setHover(null); };
+        document.addEventListener('touchstart', onTouch, { passive: true });
+        return () => document.removeEventListener('touchstart', onTouch);
+    }, []);
+
     return (
         <div className="mood-chart" ref={ref} onMouseLeave={() => setHover(null)}>
             <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Mood over the selected range">
@@ -348,25 +358,35 @@ function DataTable({ buckets, firstCol }) {
     );
 }
 
-function usePortrait() {
-    const q = '(orientation: portrait)';
+function useMediaQuery(q) {
     const get = () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(q).matches;
-    const [portrait, setPortrait] = useState(get);
+    const [matches, setMatches] = useState(get);
     useEffect(() => {
         if (!window.matchMedia) return undefined;
         const mq = window.matchMedia(q);
-        const on = () => setPortrait(mq.matches);
+        const on = () => setMatches(mq.matches);
         on();
         if (mq.addEventListener) mq.addEventListener('change', on); else mq.addListener(on);
         return () => { if (mq.removeEventListener) mq.removeEventListener('change', on); else mq.removeListener(on); };
-    }, []);
-    return portrait;
+    }, [q]);
+    return matches;
 }
 
 function YearHeatmap({ logs, year, source, metric, onPick }) {
     const [hover, setHover] = useState(null);
     const wrapRef = useRef(null);
-    const portrait = usePortrait();
+    const scrollRef = useRef(null);
+    const portrait = useMediaQuery('(orientation: portrait)');
+    const todayKey = dateKey(new Date());
+
+    // Portrait: the year is a long column, so open on the current week rather than January.
+    useEffect(() => {
+        if (!portrait || !scrollRef.current) return;
+        const el = scrollRef.current;
+        const cell = el.querySelector('.mood-cell.today');
+        if (cell) el.scrollTop += cell.getBoundingClientRect().top - el.getBoundingClientRect().top - el.clientHeight / 3;
+    }, [portrait, year]);
+
     const start = new Date(year, 0, 1), end = new Date(year, 11, 31);
     const daily = dailyValues(logsInRange(logs, dateKey(start), dateKey(end)), source);
     const gridStart = addDays(start, -((start.getDay() + 6) % 7));
@@ -399,26 +419,30 @@ function YearHeatmap({ logs, year, source, metric, onPick }) {
     const hc = hover ? cells[hover.i] : null;
 
     return (
-        <div className={`mood-heatmap ${portrait ? 'portrait' : ''}`}>
+        <div className={`mood-heatmap ${portrait ? 'portrait' : ''}`} ref={scrollRef}>
             <div className="mood-heatmap-inner" ref={wrapRef} onMouseLeave={() => setHover(null)}>
-                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${label} by day in ${year}`}>
+                {/* Portrait: weekday letters live in their own strip so they can stay pinned while the year scrolls. */}
+                {portrait && (
+                    <svg className="mood-heat-dow" viewBox={`0 0 ${W} ${TOP}`} aria-hidden="true">
+                        {DOW.map((t, i) => (
+                            <text key={t} className="mood-tick" x={LEFT + i * (C + G) + C / 2} y={11} textAnchor="middle">{t.charAt(0)}</text>
+                        ))}
+                    </svg>
+                )}
+                <svg viewBox={portrait ? `0 ${TOP} ${W} ${H - TOP}` : `0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${label} by day in ${year}`}>
                     {monthCols.map(({ m, col }) => (portrait ? (
                         <text key={m} className="mood-tick" x={LEFT - 6} y={TOP + col * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{MONTHS[m]}</text>
                     ) : (
                         <text key={m} className="mood-tick" x={LEFT + col * (C + G)} y={11}>{MONTHS[m]}</text>
                     )))}
-                    {portrait
-                        ? DOW.map((t, i) => (
-                            <text key={t} className="mood-tick" x={LEFT + i * (C + G) + C / 2} y={11} textAnchor="middle">{t.charAt(0)}</text>
-                        ))
-                        : ['Mon', '', 'Wed', '', 'Fri', '', ''].map((t, r) => t && (
-                            <text key={r} className="mood-tick" x={LEFT - 6} y={TOP + r * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{t}</text>
-                        ))}
+                    {!portrait && ['Mon', '', 'Wed', '', 'Fri', '', ''].map((t, r) => t && (
+                        <text key={r} className="mood-tick" x={LEFT - 6} y={TOP + r * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{t}</text>
+                    ))}
                     {cells.map((c, i) => (
                         <rect
                             key={c.k}
                             x={cellX(c)} y={cellY(c)} width={C} height={C} rx={3}
-                            className={`mood-cell ${c.val == null ? 'empty' : `lvl-${Math.min(5, Math.max(1, Math.round(c.val)))}`} ${hover && hover.i === i ? 'hover' : ''}`}
+                            className={`mood-cell ${c.val == null ? 'empty' : `lvl-${Math.min(5, Math.max(1, Math.round(c.val)))}`} ${hover && hover.i === i ? 'hover' : ''} ${c.k === todayKey ? 'today' : ''}`}
                             onMouseEnter={(e) => enter(i, e)}
                             onClick={() => onPick(c.d)}
                         />
@@ -459,12 +483,15 @@ function describeAffect(c) {
 function EmotionSummary({ stats }) {
     const ref = useRef(null);
     const { width, height } = useSize(ref);
+    const mobile = useMediaQuery(MOBILE_QUERY);
     if (stats.ranked.length === 0) return <p className="mood-muted mood-center">No emotions tagged in this range.</p>;
     const max = stats.ranked[0].count;
     const R = 38;
     // Keep the circumplex square: as big as the panel allows, leaving room for the bar list.
-    const stacked = width < 600;
-    const side = Math.max(120, Math.floor(stacked ? Math.min(width, height * 0.6) : Math.min(height, width * 0.5)));
+    // On phones the panel grows with its content, so size from the width alone.
+    const stacked = mobile || width < 600;
+    const fitted = mobile ? Math.min(width, 400) : stacked ? Math.min(width, height * 0.6) : Math.min(height, width * 0.5);
+    const side = Math.max(120, Math.floor(fitted));
     return (
         <div className={`mood-emotions ${stacked ? 'stacked' : ''}`} ref={ref}>
             <div className="mood-emotion-map" style={{ width: side, height: side }}>
@@ -473,8 +500,8 @@ function EmotionSummary({ stats }) {
                 <div className="mood-axis mood-axis-h" />
                 <span className="mood-axis-label" style={{ left: '50%', top: '6%' }}>activation</span>
                 <span className="mood-axis-label" style={{ left: '50%', top: '94%' }}>deactivation</span>
-                <span className="mood-axis-label" style={{ left: '93%', top: '50%' }}>pleasant</span>
-                <span className="mood-axis-label" style={{ left: '7%', top: '50%' }}>unpleasant</span>
+                <span className="mood-axis-label side" style={{ left: '93%', top: '50%' }}>pleasant</span>
+                <span className="mood-axis-label side" style={{ left: '7%', top: '50%' }}>unpleasant</span>
                 {stats.ranked.map(e => {
                     const pos = circlePos(e, R);
                     const size = 3 + 8 * Math.sqrt(e.count / max);
@@ -767,7 +794,7 @@ export default class MoodTracker extends Component {
         if (view === 'calendar') {
             return (
                 <>
-                    <span className="mood-muted">{r.heatYear} · click a day to open it</span>
+                    <span className="mood-muted">{r.heatYear} · select a day to open it</span>
                     <HeatLegend />
                     <select className="mood-select" aria-label="Calendar metric" value={heatMetric} onChange={(e) => this.setState({ heatMetric: e.target.value })}>
                         {SERIES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -838,7 +865,7 @@ export default class MoodTracker extends Component {
                         </div>
                         <div className="mood-view-tools">{this.renderViewTools(r)}</div>
                     </div>
-                    <div className="mood-panel-body" key={view} onTouchStart={this.swipeStart} onTouchEnd={this.swipeEnd}>{this.renderView(r)}</div>
+                    <div className={`mood-panel-body view-${view}`} key={view} onTouchStart={this.swipeStart} onTouchEnd={this.swipeEnd}>{this.renderView(r)}</div>
                     <div className="mood-dots" aria-hidden="true">
                         {VIEWS.map(([v], i) => <span key={v} className={i === viewIdx ? 'on' : ''} />)}
                     </div>
