@@ -228,7 +228,7 @@ class App extends Component {
       );
     } else if (this.state.page === "mood" && settings.moodTrackerEnabled) {
       return (
-        <div id="content-container">
+        <div id="content-container" style={{minHeight: 0}}>
           <div id="todiary" className="navigator" onClick={() => this.setState({page: "diary"})}>&#12296;</div>
           <MoodTracker />
         </div>
