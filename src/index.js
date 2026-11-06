@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import './css/main.css';
 import './css/themeswitcher.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './css/settings.css';
 import App from './App';
 import DateComponent from './DateComponent';

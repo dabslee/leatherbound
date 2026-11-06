@@ -1,28 +1,28 @@
 import React, { Component } from 'react';
-import { listApiTokens, createApiToken, revokeApiToken, API_BASE_URL } from './api';
+import { listApiTokens, createApiToken, revokeApiToken } from './api';
 
 const EXPIRY_OPTIONS = [['', 'Never expires'], ['365', '1 year'], ['90', '90 days'], ['30', '30 days']];
 const ACCESS_OPTIONS = [['rw', 'Read & write'], ['r', 'Read only']];
 
 const buttonStyle = {
-    padding: '6px 12px',
     cursor: 'pointer',
     background: 'var(--paper-color)',
     border: '1px solid var(--text-color)',
     color: 'var(--text-color)',
     borderRadius: '4px',
     fontFamily: 'var(--body-font)',
-    fontSize: '15px'
+    fontSize: '16px',
+    padding: '8px 12px'
 };
 
 const fieldStyle = {
-    padding: '5px 8px',
+    padding: '8px 10px',
     border: '1px solid rgba(128,128,128,0.5)',
     borderRadius: '4px',
     background: 'transparent',
     color: 'var(--text-color)',
     fontFamily: 'var(--body-font)',
-    fontSize: '15px'
+    fontSize: '16px'
 };
 
 function formatDate(iso) {
@@ -101,15 +101,11 @@ export default class ApiTokens extends Component {
         return (
             <div>
                 <h3 style={{marginTop: '0.2rem', fontFamily: 'var(--header-font)', fontSize: '0.24rem'}}>API Access</h3>
-                <p style={{fontSize: '0.16rem', marginBottom: '0.1rem', fontWeight: 'normal'}}>
-                    Create a token to let an AI agent or script read and log your moods through
-                    the API at <code>{API_BASE_URL}/api/v1/mood</code>. Tokens don't need refreshing; they work
-                    until they expire or you revoke them.
-                </p>
+                <p style={{fontSize: '0.18rem', marginBottom: '0.15rem'}}>Create an API token.</p>
 
-                <form onSubmit={this.create} style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px'}}>
+                <form className="api-token-form" onSubmit={this.create}>
                     <input type="text" placeholder="Token name, e.g. My assistant" value={name} maxLength={80}
-                        onChange={(e) => this.setState({ name: e.target.value })} style={{...fieldStyle, flex: '1 1 180px'}} />
+                        onChange={(e) => this.setState({ name: e.target.value })} style={fieldStyle} />
                     <select value={access} onChange={(e) => this.setState({ access: e.target.value })} style={fieldStyle} aria-label="Access">
                         {ACCESS_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>

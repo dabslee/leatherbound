@@ -190,3 +190,19 @@
     background-color: rgba(150, 150, 150, 0.5);
     border-radius: 4px;
 }
+
+/* API token form: one row on desktop, stacked on small screens */
+.api-token-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.api-token-form input[type="text"] { flex: 1 1 100%; min-width: 0; }
+.api-token-form select, .api-token-form button { flex: 1 1 auto; }
+@media (min-width: 700px) {
+    .api-token-form { flex-wrap: nowrap; }
+    .api-token-form input[type="text"] { flex: 1 1 auto; }
+    .api-token-form select, .api-token-form button { flex: 0 0 auto; }
+}
+[data-theme="dark"] .api-token-form select option { background-color: #222; color: var(--text-color); }

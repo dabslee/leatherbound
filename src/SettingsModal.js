@@ -286,9 +286,9 @@ export default class SettingsModal extends Component {
                         <p style={{marginTop: '10px', fontSize: '0.16rem', color: 'gray'}}>
                             {this.getSyncStatusText()}<br/>{this.getLastSyncText()}
                         </p>
-                        <div style={{marginTop: '12px', borderTop: '1px solid rgba(128,128,128,0.2)', paddingTop: '12px'}}>
+                        <div style={{marginTop: '12px'}}>
                             <p style={{fontSize: '0.16rem', marginBottom: '8px'}}>
-                                Manual sync — use these if automatic sync got out of step:
+                                Manual sync (use these if automatic sync got out of step):
                             </p>
                             <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
                                 <button
@@ -296,8 +296,6 @@ export default class SettingsModal extends Component {
                                     disabled={!isOnline || this.state.syncBusy}
                                     title="Replace this device's data with the cloud copy"
                                     style={{
-                                        flex: 1,
-                                        minWidth: '160px',
                                         padding: '8px 12px',
                                         cursor: (isOnline && !this.state.syncBusy) ? 'pointer' : 'not-allowed',
                                         background: 'var(--paper-color)',
@@ -309,15 +307,13 @@ export default class SettingsModal extends Component {
                                         opacity: (isOnline && !this.state.syncBusy) ? 1 : 0.6
                                     }}
                                 >
-                                    ⬇ Force Pull (Cloud → Local)
+                                    <i className="bi bi-cloud-download" /> Force Pull
                                 </button>
                                 <button
                                     onClick={this.handleForcePush}
                                     disabled={!isOnline || this.state.syncBusy}
                                     title="Replace the cloud copy with this device's data"
                                     style={{
-                                        flex: 1,
-                                        minWidth: '160px',
                                         padding: '8px 12px',
                                         cursor: (isOnline && !this.state.syncBusy) ? 'pointer' : 'not-allowed',
                                         background: 'var(--paper-color)',
@@ -329,7 +325,7 @@ export default class SettingsModal extends Component {
                                         opacity: (isOnline && !this.state.syncBusy) ? 1 : 0.6
                                     }}
                                 >
-                                    ⬆ Force Push (Local → Cloud)
+                                    <i className="bi bi-cloud-upload" /> Force Push
                                 </button>
                             </div>
                             {this.state.syncMessage && (
