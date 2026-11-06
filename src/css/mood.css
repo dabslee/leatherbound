@@ -40,10 +40,12 @@
 }
 
 .mood-page {
-    flex: 1;
     min-width: 0;
     min-height: 0;
-    max-width: 13rem;
+    /* Same footprint as the diary page (80vw wide, 0.15rem margin). */
+    flex: 0 1 80vw;
+    max-width: 80vw;
+    margin: 0 0.15rem;
     display: flex;
     flex-direction: column;
     gap: 0.12rem;
@@ -428,7 +430,7 @@
 .mood-form-actions .mood-error { margin-right: auto; }
 
 @media (max-width: 768px) {
-    .mood-page { font-size: 0.22rem; }
+    .mood-page { font-size: 0.22rem; flex: 1; max-width: none; margin: 0; }
     .mood-panel { margin-bottom: 0; }
     .mood-panel-body { flex: none; height: 5rem; }
     .mood-tab { font-size: 0.24rem; padding: 0 0.05rem; }
