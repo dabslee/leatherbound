@@ -323,7 +323,12 @@
 .mood-chart { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .mood-chart svg { position: absolute; inset: 0; display: block; }
 .mood-heatmap { position: relative; flex: 1; min-height: 0; }
+.mood-heatmap-inner { position: relative; width: 100%; height: 100%; }
 .mood-heatmap svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* Portrait: the transposed grid is tall, so let it scroll instead of shrinking to fit. */
+.mood-heatmap.portrait { overflow-y: auto; scrollbar-width: thin; touch-action: pan-y; }
+.mood-heatmap.portrait .mood-heatmap-inner { height: auto; }
+.mood-heatmap.portrait svg { position: static; height: auto; }
 .mood-grid { stroke: var(--mood-grid); stroke-width: 1; }
 .mood-crosshair { stroke: var(--mood-axis); stroke-width: 1; stroke-dasharray: 3 3; }
 .mood-tick { fill: var(--mood-ink-muted); font-size: 12px; font-family: Arial, sans-serif; font-weight: normal; font-variant-numeric: tabular-nums; }

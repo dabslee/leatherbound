@@ -348,9 +348,25 @@ function DataTable({ buckets, firstCol }) {
     );
 }
 
+function usePortrait() {
+    const q = '(orientation: portrait)';
+    const get = () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(q).matches;
+    const [portrait, setPortrait] = useState(get);
+    useEffect(() => {
+        if (!window.matchMedia) return undefined;
+        const mq = window.matchMedia(q);
+        const on = () => setPortrait(mq.matches);
+        on();
+        if (mq.addEventListener) mq.addEventListener('change', on); else mq.addListener(on);
+        return () => { if (mq.removeEventListener) mq.removeEventListener('change', on); else mq.removeListener(on); };
+    }, []);
+    return portrait;
+}
+
 function YearHeatmap({ logs, year, source, metric, onPick }) {
     const [hover, setHover] = useState(null);
     const wrapRef = useRef(null);
+    const portrait = usePortrait();
     const start = new Date(year, 0, 1), end = new Date(year, 11, 31);
     const daily = dailyValues(logsInRange(logs, dateKey(start), dateKey(end)), source);
     const gridStart = addDays(start, -((start.getDay() + 6) % 7));
@@ -366,7 +382,12 @@ function YearHeatmap({ logs, year, source, metric, onPick }) {
         cells.push({ k, d, col, row, val: v ? v[metric] : null, n: v ? v.logCount : 0 });
     }
     const cols = Math.max(...cells.map(c => c.col)) + 1;
-    const W = LEFT + cols * (C + G), H = TOP + 7 * (C + G);
+    // Portrait: transpose so weekdays run across the top and weeks run down the page.
+    const cellX = (c) => LEFT + (portrait ? c.row : c.col) * (C + G);
+    const cellY = (c) => TOP + (portrait ? c.col : c.row) * (C + G);
+    const W = portrait ? LEFT + 7 * (C + G) : LEFT + cols * (C + G);
+    const H = portrait ? TOP + cols * (C + G) : TOP + 7 * (C + G);
+    const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const label = SERIES.find(s => s.id === metric).label;
 
     // The SVG scales to fit the panel, so place the tooltip from the hovered cell's real box.
@@ -378,31 +399,39 @@ function YearHeatmap({ logs, year, source, metric, onPick }) {
     const hc = hover ? cells[hover.i] : null;
 
     return (
-        <div className="mood-heatmap" ref={wrapRef} onMouseLeave={() => setHover(null)}>
-            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${label} by day in ${year}`}>
-                {monthCols.map(({ m, col }) => (
-                    <text key={m} className="mood-tick" x={LEFT + col * (C + G)} y={11}>{MONTHS[m]}</text>
-                ))}
-                {['Mon', '', 'Wed', '', 'Fri', '', ''].map((t, r) => t && (
-                    <text key={r} className="mood-tick" x={LEFT - 6} y={TOP + r * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{t}</text>
-                ))}
-                {cells.map((c, i) => (
-                    <rect
-                        key={c.k}
-                        x={LEFT + c.col * (C + G)} y={TOP + c.row * (C + G)} width={C} height={C} rx={3}
-                        className={`mood-cell ${c.val == null ? 'empty' : `lvl-${Math.min(5, Math.max(1, Math.round(c.val)))}`} ${hover && hover.i === i ? 'hover' : ''}`}
-                        onMouseEnter={(e) => enter(i, e)}
-                        onClick={() => onPick(c.d)}
-                    />
-                ))}
-            </svg>
-            {hc && (
-                <div className={`mood-tooltip ${hover.left ? 'left' : ''}`} style={{ left: hover.x, top: hover.y }}>
-                    <div className="mood-tooltip-title">{hc.d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
-                    <div className="mood-tooltip-row">{label}<b>{fmt(hc.val)}</b></div>
-                    <div className="mood-tooltip-foot">{hc.n ? `${hc.n} log${hc.n === 1 ? '' : 's'} · click to open day` : 'No logs'}</div>
-                </div>
-            )}
+        <div className={`mood-heatmap ${portrait ? 'portrait' : ''}`}>
+            <div className="mood-heatmap-inner" ref={wrapRef} onMouseLeave={() => setHover(null)}>
+                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${label} by day in ${year}`}>
+                    {monthCols.map(({ m, col }) => (portrait ? (
+                        <text key={m} className="mood-tick" x={LEFT - 6} y={TOP + col * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{MONTHS[m]}</text>
+                    ) : (
+                        <text key={m} className="mood-tick" x={LEFT + col * (C + G)} y={11}>{MONTHS[m]}</text>
+                    )))}
+                    {portrait
+                        ? DOW.map((t, i) => (
+                            <text key={t} className="mood-tick" x={LEFT + i * (C + G) + C / 2} y={11} textAnchor="middle">{t.charAt(0)}</text>
+                        ))
+                        : ['Mon', '', 'Wed', '', 'Fri', '', ''].map((t, r) => t && (
+                            <text key={r} className="mood-tick" x={LEFT - 6} y={TOP + r * (C + G) + C / 2} textAnchor="end" dominantBaseline="middle">{t}</text>
+                        ))}
+                    {cells.map((c, i) => (
+                        <rect
+                            key={c.k}
+                            x={cellX(c)} y={cellY(c)} width={C} height={C} rx={3}
+                            className={`mood-cell ${c.val == null ? 'empty' : `lvl-${Math.min(5, Math.max(1, Math.round(c.val)))}`} ${hover && hover.i === i ? 'hover' : ''}`}
+                            onMouseEnter={(e) => enter(i, e)}
+                            onClick={() => onPick(c.d)}
+                        />
+                    ))}
+                </svg>
+                {hc && (
+                    <div className={`mood-tooltip ${hover.left ? 'left' : ''}`} style={{ left: hover.x, top: hover.y }}>
+                        <div className="mood-tooltip-title">{hc.d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                        <div className="mood-tooltip-row">{label}<b>{fmt(hc.val)}</b></div>
+                        <div className="mood-tooltip-foot">{hc.n ? `${hc.n} log${hc.n === 1 ? '' : 's'} · click to open day` : 'No logs'}</div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -643,6 +672,21 @@ export default class MoodTracker extends Component {
 
     pickDay = (d) => this.setState({ mode: 'history', period: 'day', anchor: d, view: 'trend' });
 
+    swipeStart = (e) => {
+        const t = e.touches[0];
+        this.swipe = e.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null;
+    };
+
+    swipeEnd = (e) => {
+        const st = this.swipe;
+        this.swipe = null;
+        if (!st) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - st.x, dy = t.clientY - st.y;
+        // A deliberate, mostly-horizontal flick: left goes to the next tab, right to the previous.
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) this.stepView(dx < 0 ? 1 : -1);
+    };
+
     stepView = (dir) => this.setState(s => {
         const i = VIEWS.findIndex(v => v[0] === s.view);
         return { view: VIEWS[(i + dir + VIEWS.length) % VIEWS.length][0] };
@@ -794,7 +838,7 @@ export default class MoodTracker extends Component {
                         </div>
                         <div className="mood-view-tools">{this.renderViewTools(r)}</div>
                     </div>
-                    <div className="mood-panel-body" key={view}>{this.renderView(r)}</div>
+                    <div className="mood-panel-body" key={view} onTouchStart={this.swipeStart} onTouchEnd={this.swipeEnd}>{this.renderView(r)}</div>
                     <div className="mood-dots" aria-hidden="true">
                         {VIEWS.map(([v], i) => <span key={v} className={i === viewIdx ? 'on' : ''} />)}
                     </div>
